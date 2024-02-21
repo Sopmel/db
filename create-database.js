@@ -99,6 +99,67 @@ productsCollection.insertMany(
     ]
 );
 
+const OffersSchema = new mongoose.Schema({
+    Products: {type: [String]},
+    Price: {type: Number},
+    Active: {type: Boolean} 
+});
+
+const offersModel = mongoose.model("Offers", OffersSchema);
+
+
+
+let offersCollection = await offersModel.createCollection();
+
+offersCollection.insertMany(
+    [     
+       {
+        Products: ["Laptop", "Smartphone"],
+        Price: 1800,
+        Active: true
+       },
+       {
+        Products: ["T-shirt", "Shampoo"],
+        Price: 30,
+        Active: true
+       },
+       {
+        Products: ["Refrigerator", "Smartphone", "Soccer Ball"],
+        Price: 1830,
+        Active: false
+       }
+    ]
+);
+
+const salesSchema = new mongoose.Schema({
+      Offer: {type: String},
+      Quantity: {type: Number},
+      Status: {type: Boolean} 
+});
+
+const salesModel = mongoose.model("Sales Offers", salesSchema);
+
+
+
+let salesCollection = await salesModel.createCollection();
+
+salesCollection.insertMany(
+    [     
+       {
+        Offer: "Offer 1",
+        Quantity: 2,
+        Status: pending
+       },
+       {
+        Offer: "Offer 3",
+        Quantity: 1,
+        Status: pending
+       }
+    ]
+);
+
+
+
 // let result = await productModel.find({})
 
 // console.log(result);
