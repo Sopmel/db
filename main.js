@@ -68,15 +68,15 @@ while(runApp){
         let supplierInput = p("Choose supplier for the new product:\n1. Electronics\n2. Fashion\n3. Add new Supplier\n");
     
         if (supplierInput === "1" || supplierInput === "2") {
-            // Get the supplier based on the input
+            
             let supplierId;
             if (supplierInput === "1") {
-                supplierId = '65d5b5b413a069370e593b7c'; // Existing supplier for Electronics
+                supplierId = '65d5b5b413a069370e593b7c'; // Electronics
             } else {
-                supplierId = '65d5b5b413a069370e593b7d'; // Existing supplier for Fashion
+                supplierId = '65d5b5b413a069370e593b7d'; // Fashion & Beauty
             }
     
-            // Create the product with the obtained supplierId
+            // skapa produkt med befintlig supplier
             productModel.create({
                 Name: newName,
                 Category: newCategory,
@@ -96,11 +96,11 @@ while(runApp){
             let supplierContact = p("Enter the contact information of the new supplier: ");
     
             try {
-                // Check if the supplier already exists
+                // kollar om supplier finns
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
     
                 if (existingSupplier) {
-                    // If the supplier exists, use its ID
+                    // om supplier finns, använd den befintliga
                     await productModel.create({
                         Name: newName,
                         Category: newCategory,
@@ -111,7 +111,7 @@ while(runApp){
                     });
                     console.log("Product added successfully!");
                 } else {
-                    // If the supplier doesn't exist, create a new one
+                    // skapa ny supplier om ingen finns redan
                     let newSupplier = await supplierModel.create({
                         Name: supplierName,
                         Contact: supplierContact
