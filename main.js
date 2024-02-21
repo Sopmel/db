@@ -65,42 +65,27 @@ while(runApp){
         let newCost = p("Add Cost of product: ");
         let newStock = p("Add Stock of product: ");
     
-        let supplierInput = p("Choose supplier for the new product:\n1. Electronics\n2. Fashion\n3. Add new Supplier\n");
+        console.log("Choose a supplier for the new product:");
+        console.log("1. Add new Supplier"); // Lägg till alternativet för att lägga till ny leverantör först
     
-        if (supplierInput === "1" || supplierInput === "2") {
-            
-            let supplierId;
-            if (supplierInput === "1") {
-                supplierId = '65d5b5b413a069370e593b7c'; // Electronics
-            } else {
-                supplierId = '65d5b5b413a069370e593b7d'; // Fashion & Beauty
-            }
+        let suppliers = await supplierModel.find(); // Hämta alla leverantörer från databasen
+        suppliers.forEach((supplier, index) => {
+            console.log(`${index + 2}. ${supplier.Name}`); // Placera befintliga leverantörer efter "Add new Supplier"
+        });
     
-            // skapa produkt med befintlig supplier
-            productModel.create({
-                Name: newName,
-                Category: newCategory,
-                Price: newPrice,
-                Cost: newCost,
-                Stock: newStock,
-                SupplierId: supplierId
-            })
-            .then(() => {
-                console.log("Product added successfully!");
-            })
-            .catch(err => {
-                console.error("Error adding product:", err);
-            });
-        } else if (supplierInput === "3") {
+        let supplierInput = p("");
+    
+        if (supplierInput === "1") {
             let supplierName = p("Enter the name of the new supplier: ");
             let supplierContact = p("Enter the contact information of the new supplier: ");
     
             try {
-                // kollar om supplier finns
+                // kolla om leverantören redan finns
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
     
                 if (existingSupplier) {
-                    // om supplier finns, använd den befintliga
+                    console.log("Supplier already exists.");
+                    // Om leverantören redan finns, använd den befintliga
                     await productModel.create({
                         Name: newName,
                         Category: newCategory,
@@ -111,7 +96,7 @@ while(runApp){
                     });
                     console.log("Product added successfully!");
                 } else {
-                    // skapa ny supplier om ingen finns redan
+                    // Om leverantören inte finns, skapa en ny
                     let newSupplier = await supplierModel.create({
                         Name: supplierName,
                         Contact: supplierContact
@@ -130,6 +115,20 @@ while(runApp){
             } catch (err) {
                 console.error("Error:", err);
             }
+        } else if (parseInt(supplierInput) >= 2 && parseInt(supplierInput) <= suppliers.length + 1) {
+            // Använd befintlig leverantör baserat på användarens val
+            let selectedSupplier = suppliers[parseInt(supplierInput) - 2]; // Justera indexet
+            let supplierId = selectedSupplier._id;
+    
+            await productModel.create({
+                Name: newName,
+                Category: newCategory,
+                Price: newPrice,
+                Cost: newCost,
+                Stock: newStock,
+                SupplierId: supplierId
+            });
+            console.log("Product added successfully!");
         } else {
             console.log("Invalid option.");
         }
