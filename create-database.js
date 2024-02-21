@@ -148,12 +148,12 @@ salesCollection.insertMany(
        {
         Offer: "Offer 1",
         Quantity: 2,
-        Status: pending
+        Status: 'pending'
        },
        {
         Offer: "Offer 3",
         Quantity: 1,
-        Status: pending
+        Status: 'pending'
        }
     ]
 );
