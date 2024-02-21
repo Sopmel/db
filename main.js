@@ -135,6 +135,7 @@ while(runApp){
     }
     else if(input == "15"){
         runApp = false;
+        mongoose.connection.close()
     }
 
     else{
