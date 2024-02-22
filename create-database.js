@@ -29,13 +29,49 @@ suppliersCollection.insertMany(
     ]
 );
 
+const categoriesSchema = new mongoose.Schema({
+    Name: {type: String},
+    Description: {type: String} 
+});
+
+const categoriesModel = mongoose.model("Categories", categoriesSchema);
+
+
+let categoriesCollection = await categoriesModel.createCollection();
+
+categoriesCollection.insertMany(
+  [     
+     {
+      Name: "Electronics",
+      Description: "Electronic devices",
+      
+     },
+     {
+      Name: "Clothing",
+      Description: "Clothing and accecories",
+     },
+     {
+      Name: "Home Appliances",
+      Description: "Kitchen appliances",
+     },
+     {
+      Name: "Beauty & Personal Care",
+      Description: "Makeup and skin/body care",
+     },
+     {
+      Name: "Sports & Outdoors",
+      Description: "Sport related products"
+     }
+  ]
+);
+
 const productsSchema = new mongoose.Schema({
     Name: { type: String },
     Category: { type: String },
     Price: { type: Number },
     Cost: { type: Number },
     Stock: { type: Number },
-    SupplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Suppliers' }
+    SupplierName: { type: String }
    
 });
 
@@ -53,7 +89,7 @@ productsCollection.insertMany(
         Price: 1000,
         Cost: 800,
         Stock: 50,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7c') 
+        SupplierName: "Electronics Supplier Inc" 
        },
        {
         Name: "Smartphone",
@@ -61,7 +97,7 @@ productsCollection.insertMany(
         Price: 800,
         Cost: 600,
         Stock: 40,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7c')  
+        SupplierName: "Electronics Supplier Inc"  
        },
        {
         Name: "T-shirt",
@@ -69,7 +105,7 @@ productsCollection.insertMany(
         Price: 20,
         Cost: 10,
         Stock: 100,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7d')
+        SupplierName: "Fashion Supplier Co" 
        },
        {
         Name: "Refrigerator",
@@ -77,7 +113,7 @@ productsCollection.insertMany(
         Price: 1200,
         Cost: 1000,
         Stock: 30,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7c') 
+        SupplierName: "Electronics Supplier Inc" 
        },
        {
         Name: "Shampoo",
@@ -85,7 +121,7 @@ productsCollection.insertMany(
         Price: 10,
         Cost: 5,
         Stock: 80,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7d')
+        SupplierName: "Fashion Supplier Co" 
        },
        {
         Name: "Soccer Ball",
@@ -93,11 +129,12 @@ productsCollection.insertMany(
         Price: 30,
         Cost: 20,
         Stock: 60,
-        SupplierId: new ObjectId('65d5b5b413a069370e593b7d')
+        SupplierName: "Fashion Supplier Co" 
        }
 
     ]
 );
+
 
 const OffersSchema = new mongoose.Schema({
     Products: {type: [String]},
@@ -131,6 +168,30 @@ offersCollection.insertMany(
     ]
 );
 
+const ordersSchema = new mongoose.Schema({
+    products: { type: [ String ] },
+    Quantity: { type: Number },
+    TotalPrice: { type: Number },
+    Status:  { type:  Boolean }
+});
+
+const ordersModel = mongoose.model("Orders", ordersSchema);
+
+
+
+let ordersCollection = await ordersModel.createCollection();
+
+ordersCollection.insertMany(
+  [     
+    {
+        products: "Laptop",
+        Quantity: 2,
+        TotalPrice: 2000,
+        Status:  "pending"
+    }
+  ]
+);
+
 const salesSchema = new mongoose.Schema({
       Offer: {type: String},
       Quantity: {type: Number},
@@ -148,12 +209,12 @@ salesCollection.insertMany(
        {
         Offer: "Offer 1",
         Quantity: 2,
-        Status: 'pending'
+        Status: "pending"
        },
        {
         Offer: "Offer 3",
         Quantity: 1,
-        Status: 'pending'
+        Status: "pending"
        }
     ]
 );
