@@ -1,13 +1,13 @@
 import prompt from "prompt-sync";
-import mongoose, { connect, Types } from "mongoose";
+import mongoose, { connect } from "mongoose";
 const { ObjectId } = mongoose.Types;
 
 
 const con = await connect("mongodb://127.0.0.1:27017/grouptask");
 
 const SuppliersSchema = new mongoose.Schema({
-    Name: {type: String},
-    Contact: {type: String}  
+    Name: { type: String },
+    Contact: { type: String }
 });
 
 const supplierModel = mongoose.model("Suppliers", SuppliersSchema);
@@ -66,10 +66,11 @@ console.log("12. View suppliers")
 console.log("13. View all sales")
 console.log("14. View sum of all profits")
 console.log("15. Close app")
+console.log("test");
 
 let runApp = true;
 
-while(runApp){
+while (runApp) {
     let input = p("Make a choice by entering a number: ");
 
     if(input == "1"){
@@ -138,7 +139,7 @@ while(runApp){
         let newPrice = p("Add Price of product: ");
         let newCost = p("Add Cost of product: ");
         let newStock = p("Add Stock of product: ");
-    
+
         console.log("Choose a supplier for the new product:");
         console.log("1. Add new Supplier"); 
     
@@ -146,17 +147,17 @@ while(runApp){
         suppliers.forEach((supplier, index) => {
             console.log(`${index + 2}. ${supplier.Name}`); 
         });
-    
+
         let supplierInput = p("");
-    
+
         if (supplierInput === "1") {
             let supplierName = p("Enter the name of the new supplier: ");
             let supplierContact = p("Enter the contact information of the new supplier: ");
-    
+
             try {
                 // Kolla om supplier redan finns
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
-    
+
                 if (existingSupplier) {
                     console.log("Supplier already exists.");
                     // Om supplier finns, använd den
@@ -175,7 +176,7 @@ while(runApp){
                         Name: supplierName,
                         Contact: supplierContact
                     });
-    
+
                     await productModel.create({
                         Name: newName,
                         Category: newCategory,
@@ -313,7 +314,82 @@ console.log(showOffers);
     
     }
 
-    else if(input == "15"){
+    else if (input == "3") {
+        const aaa = await productModel.aggregate([
+            {
+                $group: {
+                    _id: "$Category"
+                }
+            }
+        ])
+        console.log(aaa);
+
+        aaa.forEach((data, index) => {
+            console.log();
+            console.log(index + ". " + data._id);
+            console.log();
+            console.log("---------------------");
+        })
+        
+        const ll = p ("test")
+        
+        const dda = await productModel.find({Category: ll})
+       
+        console.log(dda);
+
+        
+
+    }
+    else if (input == "4") {
+        const x = await supplierModel.find({})
+        let indexTransfer;
+        const cookies = Number(p("test"))
+        x.forEach((data, index) => {
+            console.log((index + 1) + ". " + data.Name);
+
+            if ((index + 1) == cookies) {
+
+                indexTransfer = cookies
+
+            }
+
+
+        })
+        console.log(indexTransfer);
+        const cookies55 = await productModel.find({ SupplierId: indexTransfer })
+
+
+        cookies55.forEach((prudoct) => {
+            console.log("-----------------------");
+            console.log(prudoct.Name);
+            console.log(prudoct.Category);
+            console.log(prudoct.Price);
+            console.log(prudoct.Cost);
+            console.log(prudoct.Stock);
+
+
+
+        })
+
+
+    }
+    else if (input == "8") {
+
+    }
+
+    else if (input == "12") {
+        const aa = await supplierModel.find({})
+        aa.forEach((data, index) => {
+            console.log(index + 1);
+            console.log(data.Name);
+            console.log(data.Contact);
+            console.log("---------------------");
+        })
+    }
+    else if (input == "13"){
+        
+    }
+    else if (input == "15") {
         runApp = false;
         mongoose.connection.close()
     }
@@ -327,7 +403,7 @@ console.log(showOffers);
 
     }
 
-    else{
+    else {
         console.log("Please enter a number between 1 and 15.")
     }
 

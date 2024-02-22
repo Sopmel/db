@@ -224,4 +224,3 @@ salesCollection.insertMany(
 // let result = await productModel.find({})
 
 // console.log(result);
-
