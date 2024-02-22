@@ -48,6 +48,15 @@ const ordersSchema = new mongoose.Schema({
 
 const ordersModel = mongoose.model("Orders", ordersSchema);
 
+
+const salesSchema = new mongoose.Schema({
+    Offer: {type: String},
+    Quantity: {type: Number},
+    Status: {type: Boolean} 
+});
+
+const salesModel = mongoose.model("Sales Offers", salesSchema);
+
 const p = prompt();
 
 console.log("Menu")
@@ -313,6 +322,53 @@ console.log(showOffers);
 
     
     }
+else if(input==7){
+
+let allOffers = await offersModel.find();
+
+let allProductsInStockCount = 0;
+let someProductsInStockCount = 0;
+let noProductsInStockCount = 0;
+
+for (let offer of allOffers) {
+     let allProductsInStock = true;
+    for (let productName of offer.Products) {
+        let product = await productModel.findOne({ Name: productName });
+        if (product.Stock === 0) {
+            allProductsInStock = false;
+            break;
+        }
+    }
+
+    if (allProductsInStock) {
+        allProductsInStockCount++;
+    } else {
+        let someProductsInStock = false;
+        for (let productName of offer.Products) {
+            let product = await productModel.findOne({ Name: productName });
+            if (product.Stock > 0) {
+                someProductsInStock = true;
+                break;
+            }
+        }
+        if (someProductsInStock) {
+            someProductsInStockCount++;
+        } else {
+            noProductsInStockCount++;
+        }
+    }
+}
+
+
+console.log("Summary:");
+console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
+console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
+console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
+
+
+
+}
+
 
     else if (input == "3") {
         const aaa = await productModel.aggregate([
@@ -373,9 +429,7 @@ console.log(showOffers);
 
 
     }
-    else if (input == "8") {
-
-    }
+   
 
     else if (input == "12") {
         const aa = await supplierModel.find({})
@@ -387,6 +441,23 @@ console.log(showOffers);
         })
     }
     else if (input == "13"){
+
+let allSales = await salesModel.find();
+
+
+for (let sale of allSales) {
+    let orderNumber = sale._id; 
+    let offer = await offersModel.findOne({});
+    let offerPrice = offer.Price;
+    let totalCost = sale.Quantity * offerPrice;
+    console.log(`Order number: ${orderNumber}`);
+  
+    console.log(`Offer: ${sale.Offer}`);
+    console.log(`Quantity: ${sale.Quantity}`);
+    console.log(`Status: ${sale.Status ? 'Shipped' : 'Pending'}`);
+    console.log(`Total cost: ${totalCost}\n`);
+}
+
         
     }
     else if (input == "15") {
