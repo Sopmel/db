@@ -31,6 +31,14 @@ const productsSchema = new mongoose.Schema({
 
 const productModel = mongoose.model("Products", productsSchema);
 
+const OffersSchema = new mongoose.Schema({
+    Products: {type: [String]},
+    Price: {type: Number},
+    Active: {type: Boolean} 
+});
+
+const offersModel = mongoose.model("Offers", OffersSchema);
+
 const ordersSchema = new mongoose.Schema({
     products: { type: [ String ] },
     Quantity: { type: [ Number ] },
@@ -282,6 +290,29 @@ while(runApp){
             console.error("Error creating order:", err);
         }}
     } 
+
+
+    else if(input=="5"){
+let priceRange=p('Enter the price range(use - in between)')
+ let [minPrice, maxPrice] = priceRange.split("-").map(Number);
+
+let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
+        console.log(offers);
+    }
+    else if (input=='6') {
+        let newOffers = await offersModel.find({})
+       
+     let chooseCategory=p('Select the category you want to see offers from?')
+     let productsInCategory = await productModel.find({ Category: chooseCategory });
+
+     let productNames = productsInCategory.map(product => product.Name);
+  
+let showOffers= await offersModel.find({ Products: { $in: productNames } }).select('-_id')
+console.log(showOffers);
+
+    
+    }
+
     else if(input == "15"){
         runApp = false;
         mongoose.connection.close()
