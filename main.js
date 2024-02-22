@@ -12,17 +12,33 @@ const SuppliersSchema = new mongoose.Schema({
 
 const supplierModel = mongoose.model("Suppliers", SuppliersSchema);
 
+const categoriesSchema = new mongoose.Schema({
+    Name: {type: String},
+    Description: {type: String} 
+});
+
+const categoriesModel = mongoose.model("Categories", categoriesSchema);
+
 const productsSchema = new mongoose.Schema({
     Name: { type: String },
     Category: { type: String },
     Price: { type: Number },
     Cost: { type: Number },
     Stock: { type: Number },
-    SupplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Suppliers' }
+    SupplierName: { type: String }
    
 });
 
 const productModel = mongoose.model("Products", productsSchema);
+
+const ordersSchema = new mongoose.Schema({
+    products: { type: [ String ] },
+    Quantity: { type: [ Number ] },
+    TotalPrice: { type: Number },
+    Status:  { type:  Boolean }
+});
+
+const ordersModel = mongoose.model("Orders", ordersSchema);
 
 const p = prompt();
 
@@ -49,28 +65,78 @@ while(runApp){
     let input = p("Make a choice by entering a number: ");
 
     if(input == "1"){
-        let allProducts = await productModel.find({})
+        let newCategoryName = p("Add Name of new Category: ");
+        let newCategoryDescription = p("Add Description to new Category: ")
+    try {
+        let newCategory = await categoriesModel.create({
+            Name: newCategoryName,
+            Description: newCategoryDescription
+        });
+        
+        console.log("Category added Succesfully!")
 
+        console.log(newCategory)
 
-
-        console.log("Here is a list of all the products: ");
-        console.log(allProducts);
-
-    }
+    } catch (err) {
+        console.error("Error:", err);
+    }}
 
     else if (input === "2") {
+        
         let newName = p("Add Name of product: ");
-        let newCategory = p("Add Category of product: ");
+        
+        console.log("Choose a Category for the new product:");
+        console.log("1. Add new Category");
+    
+        let categories = await categoriesModel.find();
+        categories.forEach((category, index) => {
+            console.log(`${index + 2}. ${category.Name}`);
+        });
+    
+        let categoryInput = p("");
+    
+        let newCategory;
+        if (categoryInput === "1") {
+            let newCategoryName = p("Add Name of new Category: ");
+            let newCategoryDescription = p("Add Description to new Category: ");
+        
+            try {
+                // Koll om kategorin redan finns
+                let existingCategory = await categoriesModel.findOne({ Name: newCategoryName });
+                if (existingCategory) {
+                    console.log("Category already exists.");
+                    newCategory = existingCategory.Name;
+                } else {
+                    // skapa ny om den inte finns
+                    let newCategoryDoc = await categoriesModel.create({
+                        Name: newCategoryName,
+                        Description: newCategoryDescription
+                    });
+                    newCategory = newCategoryDoc.Name; // Uppdatera newCategory med det nya kategoridokumentet
+                    console.log("New Category added successfully!");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+            }
+        } else if (parseInt(categoryInput) >= 2 && parseInt(categoryInput) <= categories.length + 1) {
+            // använd en kategori som redan finns 
+            let selectedCategory = categories[parseInt(categoryInput) - 2];
+            newCategory = selectedCategory.Name;
+        } else {
+            console.log("Invalid option for Category.");
+            
+        }
+
         let newPrice = p("Add Price of product: ");
         let newCost = p("Add Cost of product: ");
         let newStock = p("Add Stock of product: ");
     
         console.log("Choose a supplier for the new product:");
-        console.log("1. Add new Supplier"); // Lägg till alternativet för att lägga till ny leverantör först
+        console.log("1. Add new Supplier"); 
     
-        let suppliers = await supplierModel.find(); // Hämta alla leverantörer från databasen
+        let suppliers = await supplierModel.find(); // Hämta suppliers från databas
         suppliers.forEach((supplier, index) => {
-            console.log(`${index + 2}. ${supplier.Name}`); // Placera befintliga leverantörer efter "Add new Supplier"
+            console.log(`${index + 2}. ${supplier.Name}`); 
         });
     
         let supplierInput = p("");
@@ -80,23 +146,23 @@ while(runApp){
             let supplierContact = p("Enter the contact information of the new supplier: ");
     
             try {
-                // kolla om leverantören redan finns
+                // Kolla om supplier redan finns
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
     
                 if (existingSupplier) {
                     console.log("Supplier already exists.");
-                    // Om leverantören redan finns, använd den befintliga
+                    // Om supplier finns, använd den
                     await productModel.create({
                         Name: newName,
                         Category: newCategory,
                         Price: newPrice,
                         Cost: newCost,
                         Stock: newStock,
-                        SupplierId: existingSupplier._id
+                        SupplierName: existingSupplier.Name 
                     });
                     console.log("Product added successfully!");
                 } else {
-                    // Om leverantören inte finns, skapa en ny
+                    // Om supplier inte finns, skapa ny
                     let newSupplier = await supplierModel.create({
                         Name: supplierName,
                         Contact: supplierContact
@@ -108,7 +174,7 @@ while(runApp){
                         Price: newPrice,
                         Cost: newCost,
                         Stock: newStock,
-                        SupplierId: newSupplier._id
+                        SupplierName: newSupplier.Name 
                     });
                     console.log("Supplier and product added successfully!");
                 }
@@ -116,9 +182,9 @@ while(runApp){
                 console.error("Error:", err);
             }
         } else if (parseInt(supplierInput) >= 2 && parseInt(supplierInput) <= suppliers.length + 1) {
-            // Använd befintlig leverantör baserat på användarens val
-            let selectedSupplier = suppliers[parseInt(supplierInput) - 2]; // Justera indexet
-            let supplierId = selectedSupplier._id;
+            
+            let selectedSupplier = suppliers[parseInt(supplierInput) - 2]; // anpassa indexet
+            let supplierName = selectedSupplier.Name;
     
             await productModel.create({
                 Name: newName,
@@ -126,16 +192,108 @@ while(runApp){
                 Price: newPrice,
                 Cost: newCost,
                 Stock: newStock,
-                SupplierId: supplierId
+                SupplierName: supplierName 
             });
             console.log("Product added successfully!");
         } else {
             console.log("Invalid option.");
         }
     }
+    else if(input == "8"){
+        console.log("Create order for products");
+
+        let orderItems = []; 
+        let continueAdding = true;
+
+        while (continueAdding) {
+            let categories = await categoriesModel.find();
+            categories.forEach((category, index) => {
+                console.log(`${index + 1}. ${category.Name}`);
+            });
+
+        let orderInput = p("Choose category to view products( 0 to finnish): ");
+
+        if (parseInt(orderInput) === 0) {
+            console.log("Exiting order creation.");
+            break;
+        }
+
+        if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= categories.length) {
+            let selectedCategory = categories[parseInt(orderInput) - 1]; 
+            
+            try {
+                let products = await productModel.find({ Category: selectedCategory.Name });
+    
+                if (products.length > 0) {
+                    console.log(`Products in category "${selectedCategory.Name}":`);
+                    products.forEach((product, index) => {
+                        console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
+                    });
+
+                    while (true) {
+                        let productIndex = parseInt(p("Choose product to add (0 to exit): "))
+
+                        if ( productIndex === 0 ) break;
+                        if ( productIndex < 1 || productIndex > products.length ){
+                            console.log("Invalid number. "); continue;
+                        }
+
+                        let quantity = parseInt(p("How many would you like to add? "));
+                        if ( quantity <= 0 ){
+                            console.log("number must be greater than 0. "); continue;
+                        }
+
+                        let selectedProduct = products[ productIndex - 1];
+                        orderItems.push({ product: selectedProduct, quantity });
+                    }
+
+                } else {
+                    console.log("No products in this Category. ");
+                }  
+            } catch (err){
+                console.log("Error fetching Products.");
+            }
+        } else {
+            console.log("Invalid Category. ");
+       }
+
+       let continueInput = p("Do you want to add more products? (yes/no): ");
+       continueAdding = continueInput.toLowerCase() === 'yes';
+       }
+
+       if (orderItems.length > 0) {
+        // Skapa offerten baserat på orderItems
+        console.log("Order summary:");
+        orderItems.forEach((item, index) => {
+            console.log(`${index + 1}. Name: ${item.product.Name}, Quantity: ${item.quantity}, Total Price: ${item.quantity * item.product.Price}`);
+        });
+
+        // Skapa en ny order
+        try {
+            let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.product.Price, 0);
+            let newOrder = await ordersModel.create({
+                products: orderItems.map(item => item.product.Name),
+                Quantity: orderItems.map(item => item.quantity),
+                TotalPrice: totalPrice,
+                Status: false 
+            });
+            console.log("Order created successfully:", newOrder);
+        } catch (err) {
+            console.error("Error creating order:", err);
+        }}
+    } 
     else if(input == "15"){
         runApp = false;
         mongoose.connection.close()
+    }
+    else if(input == "16"){
+        let allProducts = await productModel.find({})
+
+
+
+        console.log("Here is a list of all the products: ");
+        console.log(allProducts);
+
     }
 
     else{
