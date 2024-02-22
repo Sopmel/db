@@ -42,6 +42,7 @@ console.log("12. View suppliers")
 console.log("13. View all sales")
 console.log("14. View sum of all profits")
 console.log("15. Close app")
+console.log("test");
 
 let runApp = true;
 
