@@ -13,8 +13,8 @@ const SuppliersSchema = new mongoose.Schema({
 const supplierModel = mongoose.model("Suppliers", SuppliersSchema);
 
 const categoriesSchema = new mongoose.Schema({
-    Name: {type: String},
-    Description: {type: String} 
+    Name: { type: String },
+    Description: { type: String }
 });
 
 const categoriesModel = mongoose.model("Categories", categoriesSchema);
@@ -26,15 +26,15 @@ const productsSchema = new mongoose.Schema({
     Cost: { type: Number },
     Stock: { type: Number },
     SupplierName: { type: String }
-   
+
 });
 
 const productModel = mongoose.model("Products", productsSchema);
 
 const OffersSchema = new mongoose.Schema({
-    Products: {type: [String]},
-    Price: {type: Number},
-    Active: {type: Boolean} 
+    Products: { type: [String] },
+    Price: { type: Number },
+    Active: { type: Boolean }
 });
 
 const offersModel = mongoose.model("Offers", OffersSchema);
@@ -66,50 +66,51 @@ console.log("12. View suppliers")
 console.log("13. View all sales")
 console.log("14. View sum of all profits")
 console.log("15. Close app")
-console.log("test");
+
 
 let runApp = true;
 
 while (runApp) {
     let input = p(  " \n Make a choice by entering a number: ");
 
-// 1. add new Category
-    if(input == "1"){
+    // 1. add new Category
+    if (input == "1") {
         let newCategoryName = p("Add Name of new Category: ");
         let newCategoryDescription = p("Add Description to new Category: ")
-    try {
-        let newCategory = await categoriesModel.create({
-            Name: newCategoryName,
-            Description: newCategoryDescription
-        });
-        
-        console.log("Category added Succesfully!")
+        try {
+            let newCategory = await categoriesModel.create({
+                Name: newCategoryName,
+                Description: newCategoryDescription
+            });
 
-        console.log(newCategory)
+            console.log("Category added Succesfully!")
 
-    } catch (err) {
-        console.error("Error:", err);
-    }}
-//add new Product
+            console.log(newCategory)
+
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    }
+    //add new Product
     else if (input === "2") {
-        
+
         let newName = p("Add Name of product: ");
-        
+
         console.log("Choose a Category for the new product:");
         console.log("1. Add new Category");
-    
+
         let categories = await categoriesModel.find();
         categories.forEach((category, index) => {
             console.log(`${index + 2}. ${category.Name}`);
         });
-    
+
         let categoryInput = p("");
-    
+
         let newCategory;
         if (categoryInput === "1") {
             let newCategoryName = p("Add Name of new Category: ");
             let newCategoryDescription = p("Add Description to new Category: ");
-        
+
             try {
                 // Koll om kategorin redan finns
                 let existingCategory = await categoriesModel.findOne({ Name: newCategoryName });
@@ -134,7 +135,7 @@ while (runApp) {
             newCategory = selectedCategory.Name;
         } else {
             console.log("Invalid option for Category.");
-            
+
         }
 
         let newPrice = p("Add Price of product: ");
@@ -142,11 +143,11 @@ while (runApp) {
         let newStock = p("Add Stock of product: ");
 
         console.log("Choose a supplier for the new product:");
-        console.log("1. Add new Supplier"); 
-    
+        console.log("1. Add new Supplier");
+
         let suppliers = await supplierModel.find(); // Hämta suppliers från databas
         suppliers.forEach((supplier, index) => {
-            console.log(`${index + 2}. ${supplier.Name}`); 
+            console.log(`${index + 2}. ${supplier.Name}`);
         });
 
         let supplierInput = p("");
@@ -168,7 +169,7 @@ while (runApp) {
                         Price: newPrice,
                         Cost: newCost,
                         Stock: newStock,
-                        SupplierName: existingSupplier.Name 
+                        SupplierName: existingSupplier.Name
                     });
                     console.log("Product added successfully!");
                 } else {
@@ -184,7 +185,7 @@ while (runApp) {
                         Price: newPrice,
                         Cost: newCost,
                         Stock: newStock,
-                        SupplierName: newSupplier.Name 
+                        SupplierName: newSupplier.Name
                     });
                     console.log("Supplier and product added successfully!");
                 }
@@ -192,24 +193,24 @@ while (runApp) {
                 console.error("Error:", err);
             }
         } else if (parseInt(supplierInput) >= 2 && parseInt(supplierInput) <= suppliers.length + 1) {
-            
+
             let selectedSupplier = suppliers[parseInt(supplierInput) - 2]; // anpassa indexet
             let supplierName = selectedSupplier.Name;
-    
+
             await productModel.create({
                 Name: newName,
                 Category: newCategory,
                 Price: newPrice,
                 Cost: newCost,
                 Stock: newStock,
-                SupplierName: supplierName 
+                SupplierName: supplierName
             });
             console.log("Product added successfully!");
         } else {
             console.log("Invalid option.");
         }
     }
-//3. View products by category
+    //3. View products by category
     else if (input == "3") {
         const aaa = await productModel.aggregate([
             {
@@ -226,14 +227,14 @@ while (runApp) {
             console.log();
             console.log("---------------------");
         })
-        
-        const ll = p ("test")
-        
-        const dda = await productModel.find({Category: ll})
-       
+
+        const ll = p("test")
+
+        const dda = await productModel.find({ Category: ll })
+
         console.log(dda);
     }
-//4. View products by supplier
+    //4. View products by supplier
     else if (input == "4") {
         const x = await supplierModel.find({})
         let indexTransfer;
@@ -267,26 +268,26 @@ while (runApp) {
 
 
     }
-//5. View all offers within a price range
-    else if(input=="5"){
-let priceRange=p('Enter the price range(use - in between)')
- let [minPrice, maxPrice] = priceRange.split("-").map(Number);
+    //5. View all offers within a price range
+    else if (input == "5") {
+        let priceRange = p('Enter the price range(use - in between)')
+        let [minPrice, maxPrice] = priceRange.split("-").map(Number);
 
-let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
+        let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
         console.log(offers);
     }
-    else if (input=='6') {
+    else if (input == '6') {
         let newOffers = await offersModel.find({})
-       
-     let chooseCategory=p('Select the category you want to see offers from?')
-     let productsInCategory = await productModel.find({ Category: chooseCategory });
 
-     let productNames = productsInCategory.map(product => product.Name);
-  
-let showOffers= await offersModel.find({ Products: { $in: productNames } }).select('-_id')
-console.log(showOffers);
+        let chooseCategory = p('Select the category you want to see offers from?')
+        let productsInCategory = await productModel.find({ Category: chooseCategory });
 
-    
+        let productNames = productsInCategory.map(product => product.Name);
+
+        let showOffers = await offersModel.find({ Products: { $in: productNames } }).select('-_id')
+        console.log(showOffers);
+
+
     }
 //8. Create order for products
 else if (input == "8") {
@@ -303,10 +304,10 @@ else if (input == "8") {
 
         let orderInput = p("Choose category to view products( 0 to finish): ");
 
-        if (parseInt(orderInput) === 0) {
-            console.log("Exiting order creation.");
-            break;
-        }
+            if (parseInt(orderInput) === 0) {
+                console.log("Exiting order creation.");
+                break;
+            }
 
         if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= categories.length) {
             let selectedCategory = categories[parseInt(orderInput) - 1];
@@ -323,10 +324,10 @@ else if (input == "8") {
                     });
 
                     while (true) {
-                        let productIndex = parseInt(p("Choose product to add (0 to close category): "));
+                        let productIndex = parseInt(p("Choose product to add (0 to exit): "))
 
-                        if (productIndex === 0) break;
-                        if (productIndex < 1 || productIndex > products.length) {
+                        if ( productIndex === 0 ) break;
+                        if ( productIndex < 1 || productIndex > products.length ){
                             console.log("Invalid number. "); continue;
                         }
 
@@ -379,7 +380,7 @@ else if (input == "8") {
             console.error("Error creating order:", err);
         }
     }
-}
+
 //9. Create order for offers
 else if (input == "9") {
     console.log("Create order for offers");
@@ -489,14 +490,36 @@ else if (input == "10"){
             console.log("---------------------");
         })
     }
-    else if (input == "13"){
-        
+    else if (input == "13") {}
+
+    else if (input == "14") {
+
+
+        let getProfit = await productModel.aggregate([{
+            $group: {
+                _id: null,
+                sumOfCost: { "$sum": "$Cost" },
+                sumOfPrice: { "$sum": "$Price" }
+            }
+
+        }, {
+            $addFields: {
+                profit: { $subtract: ["$sumOfPrice", "$sumOfCost"] }
+            }
+        }
+
+
+
+        ])//test
+        console.log(getProfit);
+
+
     }
     else if (input == "15") {
         runApp = false;
         mongoose.connection.close()
     }
-    else if(input == "16"){
+    else if (input == "16") {
         let allProducts = await productModel.find({})
 
 
@@ -510,7 +533,8 @@ else if (input == "10"){
         console.log("Please enter a number between 1 and 15.")
     }
 
-};
+
+
 
 
 
