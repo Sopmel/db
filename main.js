@@ -301,6 +301,52 @@ while (runApp) {
 
 
     }
+    else if(input==7){
+
+        let allOffers = await offersModel.find();
+        
+        let allProductsInStockCount = 0;
+        let someProductsInStockCount = 0;
+        let noProductsInStockCount = 0;
+        
+        for (let offer of allOffers) {
+             let allProductsInStock = true;
+            for (let productName of offer.Products) {
+                let product = await productModel.findOne({ Name: productName });
+                if (product.Stock === 0) {
+                    allProductsInStock = false;
+                    break;
+                }
+            }
+        
+            if (allProductsInStock) {
+                allProductsInStockCount++;
+            } else {
+                let someProductsInStock = false;
+                for (let productName of offer.Products) {
+                    let product = await productModel.findOne({ Name: productName });
+                    if (product.Stock > 0) {
+                        someProductsInStock = true;
+                        break;
+                    }
+                }
+                if (someProductsInStock) {
+                    someProductsInStockCount++;
+                } else {
+                    noProductsInStockCount++;
+                }
+            }
+        }
+        
+        
+        console.log("Summary:");
+        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
+        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
+        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
+        
+        
+        
+        }
     //8. Create order for products
     else if (input == "8") {
         console.log("Create order for products");
@@ -396,7 +442,26 @@ while (runApp) {
             console.log("---------------------");
         })
     }
-    else if (input == "13") {}
+    else if (input == "13") {
+
+        let allSales = await salesModel.find();
+
+
+        for (let sale of allSales) {
+            let orderNumber = sale._id;
+            let offer = await offersModel.findOne({});
+            let offerPrice = offer.Price;
+            let totalCost = sale.Quantity * offerPrice;
+            console.log(`Order number: ${orderNumber}`);
+
+            console.log(`Offer: ${sale.Offer}`);
+            console.log(`Quantity: ${sale.Quantity}`);
+            console.log(`Status: ${sale.Status ? 'Shipped' : 'Pending'}`);
+            console.log(`Total cost: ${totalCost}\n`);
+        }
+
+
+    }
 
     else if (input == "14") {
 
@@ -410,13 +475,18 @@ while (runApp) {
 
         }, {
             $addFields: {
-                profit: { $subtract: ["$sumOfPrice", "$sumOfCost"] }
+                profit: { $subtract: ["$sumOfPrice", "$sumOfCost"] },
+                profitmultiply: { $multiply: ["$profit", 2] }
             }
         }
 
 
 
         ])//test
+        console.log(getProfit._id);
+        console.log(getProfit.sumOfCost);
+        console.log(getProfit.sumOfPrice);
+        console.log(getProfit);
         console.log(getProfit);
 
 
