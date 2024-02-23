@@ -1,6 +1,6 @@
 import prompt from "prompt-sync";
 import mongoose, { connect } from "mongoose";
-const { ObjectId } = mongoose.Types;
+//const { ObjectId } = mongoose.Types;
 
 
 const con = await connect("mongodb://127.0.0.1:27017/grouptask");
@@ -26,7 +26,7 @@ const productsSchema = new mongoose.Schema({
     Cost: { type: Number },
     Stock: { type: Number },
     SupplierName: { type: String }
-   
+
 });
 
 const productModel = mongoose.model("Products", productsSchema);
@@ -39,26 +39,14 @@ const OffersSchema = new mongoose.Schema({
 
 const offersModel = mongoose.model("Offers", OffersSchema);
 
-const ordersSchema = new mongoose.Schema({
+const salesOrdersSchema = new mongoose.Schema({
     products: { type: [String] },
     Quantity: { type: [Number] },
     TotalPrice: { type: Number },
-    Status: { type: Boolean }
+    Status: { type: String }
 });
 
-const ordersModel = mongoose.model("Orders", ordersSchema);
-
-
-
-const salesSchema = new mongoose.Schema({
-    Offer: { type: String },
-    Quantity: { type: Number },
-    Status: { type: Boolean }
-});
-
-const salesModel = mongoose.model("Sales Offers", salesSchema);
-
-
+const salesOrdersModel = mongoose.model("salesOrders", salesOrdersSchema);
 
 const p = prompt();
 
@@ -83,7 +71,7 @@ console.log("15. Close app")
 let runApp = true;
 
 while (runApp) {
-    let input = p("Make a choice by entering a number: ");
+    let input = p(" \n Make a choice by entering a number: ");
 
     // 1. add new Category
     if (input == "1") {
@@ -252,22 +240,22 @@ while (runApp) {
         allSupplier.forEach((data, index) => {
             console.log();
             console.log((index + 1) + ". " + data.Name);
-            
+
         })
         const userUhoice = Number(p("Choose supplier to wiew products: "))
-        
 
-        if (userUhoice >= "1"){
-            let selsup = allSupplier[userUhoice-1]
+
+        if (userUhoice >= "1") {
+            let selsup = allSupplier[userUhoice - 1]
             let supname = selsup.Name
-            
+
             const SupplierNameByUser = await productModel.find({ SupplierName: supname })
-console.log(SupplierNameByUser);
+            console.log(SupplierNameByUser);
         }
-        else{
+        else {
             console.log("error");
         }
-        
+
         // const SupplierNameByUser = await productModel.find({ SupplierName: userUhoice })
 
 
@@ -303,6 +291,52 @@ console.log(SupplierNameByUser);
 
         let showOffers = await offersModel.find({ Products: { $in: productNames } }).select('-_id')
         console.log(showOffers);
+
+
+    }
+    else if (input == 7) {
+
+        let allOffers = await offersModel.find();
+
+        let allProductsInStockCount = 0;
+        let someProductsInStockCount = 0;
+        let noProductsInStockCount = 0;
+
+        for (let offer of allOffers) {
+            let allProductsInStock = true;
+            for (let productName of offer.Products) {
+                let product = await productModel.findOne({ Name: productName });
+                if (product.Stock === 0) {
+                    allProductsInStock = false;
+                    break;
+                }
+            }
+
+            if (allProductsInStock) {
+                allProductsInStockCount++;
+            } else {
+                let someProductsInStock = false;
+                for (let productName of offer.Products) {
+                    let product = await productModel.findOne({ Name: productName });
+                    if (product.Stock > 0) {
+                        someProductsInStock = true;
+                        break;
+                    }
+                }
+                if (someProductsInStock) {
+                    someProductsInStockCount++;
+                } else {
+                    noProductsInStockCount++;
+                }
+            }
+        }
+
+
+        console.log("Summary:");
+        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
+        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
+        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
+
 
 
     }
@@ -365,7 +399,7 @@ console.log(SupplierNameByUser);
                 console.log(`${index + 1}. ${category.Name}`);
             });
 
-            let orderInput = p("Choose category to view products( 0 to finnish): ");
+            let orderInput = p("Choose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
                 console.log("Exiting order creation.");
@@ -376,7 +410,9 @@ console.log(SupplierNameByUser);
                 let selectedCategory = categories[parseInt(orderInput) - 1];
 
                 try {
-                    let products = await productModel.find({ Category: selectedCategory.Name });
+                    let products = await productModel.aggregate([
+                        { $match: { Category: selectedCategory.Name } }
+                    ]);
 
                     if (products.length > 0) {
                         console.log(`Products in category "${selectedCategory.Name}":`);
@@ -416,16 +452,21 @@ console.log(SupplierNameByUser);
         }
 
         if (orderItems.length > 0) {
-            // Skapa offerten baserat på orderItems
-            console.log("Order summary:");
-            orderItems.forEach((item, index) => {
-                console.log(`${index + 1}. Name: ${item.product.Name}, Quantity: ${item.quantity}, Total Price: ${item.quantity * item.product.Price}`);
-            });
+            // Beräkna det totala priset för ordern
+            let totalPriceResult = await productModel.aggregate([
+                { $match: { _id: { $in: orderItems.map(item => item.product._id) } } },
+                { $group: { _id: null, totalPrice: { $sum: { $multiply: ["$Price", { $arrayElemAt: [orderItems.map(item => item.quantity), 0] }] } } } }
+            ]);
 
+            if (totalPriceResult.length === 0) {
+                console.log("Failed to calculate total price.");
+
+            }
+
+            let totalPrice = totalPriceResult[0].totalPrice;
             // Skapa en ny order
             try {
-                let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.product.Price, 0);
-                let newOrder = await ordersModel.create({
+                let newOrder = await salesOrdersModel.create({
                     products: orderItems.map(item => item.product.Name),
                     Quantity: orderItems.map(item => item.quantity),
                     TotalPrice: totalPrice,
@@ -437,6 +478,105 @@ console.log(SupplierNameByUser);
             }
         }
     }
+    //9. Create order for offers
+    else if (input == "9") {
+        console.log("Create order for offers");
+
+        let orderItems = [];
+        let continueAddingOffer = true;
+
+        while (continueAddingOffer) {
+            let offers = await offersModel.aggregate([
+                {
+                    $group: {
+                        _id: "$Products",
+                        totalQuantity: { $sum: 1 },
+                        totalPrice: { $first: "$Price" }
+                    }
+                }
+            ]);
+
+            offers.forEach((offer, index) => {
+                console.log(`${index + 1}. Offer: \n Products: ${offer._id.join(', ')} \n Price: ${offer.totalPrice}`);
+            });
+
+            let orderInput = p("Choose offer to add (0 to finish): ");
+
+            if (parseInt(orderInput) === 0) {
+                console.log("Exiting offer creation.");
+                break;
+            }
+
+            if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= offers.length) {
+                let selectedOffer = offers[parseInt(orderInput) - 1];
+
+                let quantity = parseInt(p("How many would you like to add? "));
+                if (quantity <= 0) {
+                    console.log("Quantity must be greater than 0.");
+                    continue;
+                }
+
+                orderItems.push({ offer: selectedOffer, quantity });
+            } else {
+                console.log("Invalid option for Offer.");
+            }
+
+            let continueInput = p("Do you want to add more offers? (yes/no): ");
+            continueAddingOffer = continueInput.toLowerCase() === 'yes';
+        }
+
+        if (orderItems.length > 0) {
+            try {
+                // Beräkna den totala priset för ordern baserat på valda erbjudanden
+                let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.offer.totalPrice, 0);
+
+                // Skapa en ny order
+                let newOrder = await salesOrdersModel.create({
+                    products: orderItems.map(item => item.offer._id.join(', ')),
+                    Quantity: orderItems.map(item => item.quantity),
+                    TotalPrice: totalPrice,
+                    Status: false
+                });
+                console.log("Order created successfully:", newOrder);
+            } catch (err) {
+                console.error("Error creating order:", err);
+            }
+        }
+    }
+
+    //10.Ship Orders
+    else if (input == "10") {
+        console.log("Ship Orders");
+
+        let shipItems = [];
+        let continueShipping = true;
+
+        while (continueShipping) {
+            let salesOrders = await salesOrdersModel.aggregate([
+                {
+                    $group: {
+                        _id: "$Products",
+                        totalQuantity: { $sum: 1 },
+                        totalPrice: { $first: "$Price" },
+                        Status: "Status"
+                    }
+                }
+            ]);
+
+            salesOrders.forEach((orderToShip, index) => {
+                console.log(`\n${index + 1}. Order: \n Products: ${orderToShip.Products} \n Price: ${orderToShip.totalPrice} \n Price: ${orderToShip.Status}`);
+            });
+
+            let orderInput = p("Choose order to ship (0 to finish): ");
+
+            if (parseInt(orderInput) === 0) {
+                break;
+            }
+        }
+
+
+    }
+
     //12. View suppliers
     else if (input == "12") {
         const aa = await supplierModel.find({})
@@ -500,24 +640,25 @@ console.log(SupplierNameByUser);
         runApp = false;
         mongoose.connection.close()
     }
-    else if (input == "16") {
-        let allProducts = await productModel.find({})
+    // else if (input == "16") {
+    //     let allProducts = await productModel.find({})
 
 
 
-        console.log("Here is a list of all the products: ");
-        console.log(allProducts);
+    //     console.log("Here is a list of all the products: ");
+    //     console.log(allProducts);
 
-    }
+    // }
 
     else {
         console.log("Please enter a number between 1 and 15.")
     }
 
-};
 
 
 
 
+
+}
 
 
