@@ -446,7 +446,6 @@ else if (input == "9") {
         }
     }
 }
-
 //10.Ship Orders
 else if (input == "10"){
     console.log("Ship Orders");
@@ -532,6 +531,8 @@ else if (input == "10"){
     else {
         console.log("Please enter a number between 1 and 15.")
     }
+
+}};
 
 
 
