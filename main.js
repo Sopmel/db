@@ -396,19 +396,7 @@ while (runApp) {
             console.log("---------------------");
         })
     }
-    else if (input == "13") {
-        const coconut = await salesModel.find({})
-        console.log(coconut);
-
-        const banana = await salesModel.aggregate([
-            {
-                $addFields: {
-
-                }
-            }
-        ])
-        console.log(banana);
-    }
+    else if (input == "13") {}
 
     else if (input == "14") {
 
@@ -428,7 +416,7 @@ while (runApp) {
 
 
 
-        ])
+        ])//test
         console.log(getProfit);
 
 
