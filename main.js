@@ -26,7 +26,7 @@ const productsSchema = new mongoose.Schema({
     Cost: { type: Number },
     Stock: { type: Number },
     SupplierName: { type: String }
-
+   
 });
 
 const productModel = mongoose.model("Products", productsSchema);
@@ -224,59 +224,64 @@ while (runApp) {
     }
     //3. View products by category
     else if (input == "3") {
-        const aaa = await productModel.aggregate([
+        const GroupCategory = await productModel.aggregate([
             {
                 $group: {
                     _id: "$Category"
                 }
             }
         ])
-        console.log(aaa);
+        console.log(GroupCategory);
 
-        aaa.forEach((data, index) => {
+        GroupCategory.forEach((data, index) => {
             console.log();
             console.log(index + ". " + data._id);
             console.log();
             console.log("---------------------");
         })
 
-        const ll = p("test")
+        const UsersChoice = p("Choose a category: ")
 
-        const dda = await productModel.find({ Category: ll })
+        const GetProducts = await productModel.find({ Category: UsersChoice })
 
-        console.log(dda);
+        console.log(GetProducts);
     }
     //4. View products by supplier
     else if (input == "4") {
-        const x = await supplierModel.find({})
-        let indexTransfer;
-        const cookies = Number(p("test"))
-        x.forEach((data, index) => {
+        const allSupplier = await supplierModel.find({})
+        allSupplier.forEach((data, index) => {
+            console.log();
             console.log((index + 1) + ". " + data.Name);
-
-            if ((index + 1) == cookies) {
-
-                indexTransfer = cookies
-
-            }
-
-
+            
         })
-        console.log(indexTransfer);
-        const cookies55 = await productModel.find({ SupplierId: indexTransfer })
+        const userUhoice = Number(p("Choose supplier to wiew products: "))
+        
+
+        if (userUhoice >= "1"){
+            let selsup = allSupplier[userUhoice-1]
+            let supname = selsup.Name
+            
+            const SupplierNameByUser = await productModel.find({ SupplierName: supname })
+console.log(SupplierNameByUser);
+        }
+        else{
+            console.log("error");
+        }
+        
+        // const SupplierNameByUser = await productModel.find({ SupplierName: userUhoice })
 
 
-        cookies55.forEach((prudoct) => {
-            console.log("-----------------------");
-            console.log(prudoct.Name);
-            console.log(prudoct.Category);
-            console.log(prudoct.Price);
-            console.log(prudoct.Cost);
-            console.log(prudoct.Stock);
+        // SupplierNameByUser.forEach((product) => {
+        //     console.log("-----------------------");
+        //     console.log(product.Name);
+        //     console.log(product.Category);
+        //     console.log(product.Price);
+        //     console.log(product.Cost);
+        //     console.log(product.Stock);
 
 
 
-        })
+        // })
 
 
     }
