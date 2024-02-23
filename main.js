@@ -1,6 +1,6 @@
 import prompt from "prompt-sync";
 import mongoose, { connect } from "mongoose";
-const { ObjectId } = mongoose.Types;
+//const { ObjectId } = mongoose.Types;
 
 
 const con = await connect("mongodb://127.0.0.1:27017/grouptask");
@@ -39,14 +39,14 @@ const OffersSchema = new mongoose.Schema({
 
 const offersModel = mongoose.model("Offers", OffersSchema);
 
-const ordersSchema = new mongoose.Schema({
+const salesOrdersSchema = new mongoose.Schema({
     products: { type: [ String ] },
     Quantity: { type: [ Number ] },
     TotalPrice: { type: Number },
-    Status:  { type:  Boolean }
+    Status:  { type:  String }
 });
 
-const ordersModel = mongoose.model("Orders", ordersSchema);
+const salesOrdersModel = mongoose.model("salesOrders", salesOrdersSchema);
 
 const p = prompt();
 
@@ -71,7 +71,7 @@ console.log("test");
 let runApp = true;
 
 while (runApp) {
-    let input = p("Make a choice by entering a number: ");
+    let input = p(  " \n Make a choice by entering a number: ");
 
 // 1. add new Category
     if(input == "1"){
@@ -289,19 +289,19 @@ console.log(showOffers);
     
     }
 //8. Create order for products
-    else if(input == "8"){
-        console.log("Create order for products");
+else if (input == "8") {
+    console.log("Create order for products");
 
-        let orderItems = []; 
-        let continueAdding = true;
+    let orderItems = [];
+    let continueAdding = true;
 
-        while (continueAdding) {
-            let categories = await categoriesModel.find();
-            categories.forEach((category, index) => {
-                console.log(`${index + 1}. ${category.Name}`);
-            });
+    while (continueAdding) {
+        let categories = await categoriesModel.find();
+        categories.forEach((category, index) => {
+            console.log(`${index + 1}. ${category.Name}`);
+        });
 
-        let orderInput = p("Choose category to view products( 0 to finnish): ");
+        let orderInput = p("Choose category to view products( 0 to finish): ");
 
         if (parseInt(orderInput) === 0) {
             console.log("Exiting order creation.");
@@ -309,11 +309,13 @@ console.log(showOffers);
         }
 
         if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= categories.length) {
-            let selectedCategory = categories[parseInt(orderInput) - 1]; 
-            
+            let selectedCategory = categories[parseInt(orderInput) - 1];
+
             try {
-                let products = await productModel.find({ Category: selectedCategory.Name });
-    
+                let products = await productModel.aggregate([
+                    { $match: { Category: selectedCategory.Name } }
+                ]);
+
                 if (products.length > 0) {
                     console.log(`Products in category "${selectedCategory.Name}":`);
                     products.forEach((product, index) => {
@@ -321,57 +323,162 @@ console.log(showOffers);
                     });
 
                     while (true) {
-                        let productIndex = parseInt(p("Choose product to add (0 to exit): "))
+                        let productIndex = parseInt(p("Choose product to add (0 to close category): "));
 
-                        if ( productIndex === 0 ) break;
-                        if ( productIndex < 1 || productIndex > products.length ){
+                        if (productIndex === 0) break;
+                        if (productIndex < 1 || productIndex > products.length) {
                             console.log("Invalid number. "); continue;
                         }
 
                         let quantity = parseInt(p("How many would you like to add? "));
-                        if ( quantity <= 0 ){
+                        if (quantity <= 0) {
                             console.log("number must be greater than 0. "); continue;
                         }
 
-                        let selectedProduct = products[ productIndex - 1];
+                        let selectedProduct = products[productIndex - 1];
                         orderItems.push({ product: selectedProduct, quantity });
                     }
 
                 } else {
                     console.log("No products in this Category. ");
-                }  
-            } catch (err){
+                }
+            } catch (err) {
                 console.log("Error fetching Products.");
             }
         } else {
             console.log("Invalid Category. ");
-       }
+        }
 
-       let continueInput = p("Do you want to add more products? (yes/no): ");
-       continueAdding = continueInput.toLowerCase() === 'yes';
-       }
+        let continueInput = p("Do you want to add more products? (yes/no): ");
+        continueAdding = continueInput.toLowerCase() === 'yes';
+    }
 
-       if (orderItems.length > 0) {
-        // Skapa offerten baserat på orderItems
-        console.log("Order summary:");
-        orderItems.forEach((item, index) => {
-            console.log(`${index + 1}. Name: ${item.product.Name}, Quantity: ${item.quantity}, Total Price: ${item.quantity * item.product.Price}`);
-        });
+    if (orderItems.length > 0) {
+        // Beräkna det totala priset för ordern
+        let totalPriceResult = await productModel.aggregate([
+            { $match: { _id: { $in: orderItems.map(item => item.product._id) } } },
+            { $group: { _id: null, totalPrice: { $sum: { $multiply: ["$Price", { $arrayElemAt: [orderItems.map(item => item.quantity), 0] }] } } } }
+        ]);
 
+        if (totalPriceResult.length === 0) {
+            console.log("Failed to calculate total price.");
+        
+        }
+
+        let totalPrice = totalPriceResult[0].totalPrice;
         // Skapa en ny order
         try {
-            let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.product.Price, 0);
-            let newOrder = await ordersModel.create({
+            let newOrder = await salesOrdersModel.create({
                 products: orderItems.map(item => item.product.Name),
                 Quantity: orderItems.map(item => item.quantity),
                 TotalPrice: totalPrice,
-                Status: false 
+                Status: false
             });
             console.log("Order created successfully:", newOrder);
         } catch (err) {
             console.error("Error creating order:", err);
-        }}
+        }
     }
+}
+//9. Create order for offers
+else if (input == "9") {
+    console.log("Create order for offers");
+
+    let orderItems = [];
+    let continueAddingOffer = true;
+
+    while (continueAddingOffer) {
+        let offers = await offersModel.aggregate([
+            {
+                $group: {
+                    _id: "$Products",
+                    totalQuantity: { $sum: 1 },
+                    totalPrice: { $first: "$Price" }
+                }
+            }
+        ]);
+
+        offers.forEach((offer, index) => {
+            console.log(`${index + 1}. Offer: \n Products: ${offer._id.join(', ')} \n Price: ${offer.totalPrice}`);
+        });
+
+        let orderInput = p("Choose offer to add (0 to finish): ");
+
+        if (parseInt(orderInput) === 0) {
+            console.log("Exiting offer creation.");
+            break;
+        }
+
+        if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= offers.length) {
+            let selectedOffer = offers[parseInt(orderInput) - 1];
+
+            let quantity = parseInt(p("How many would you like to add? "));
+            if (quantity <= 0) {
+                console.log("Quantity must be greater than 0.");
+                continue;
+            }
+
+            orderItems.push({ offer: selectedOffer, quantity });
+        } else {
+            console.log("Invalid option for Offer.");
+        }
+
+        let continueInput = p("Do you want to add more offers? (yes/no): ");
+        continueAddingOffer = continueInput.toLowerCase() === 'yes';
+    }
+
+    if (orderItems.length > 0) {
+        try {
+            // Beräkna den totala priset för ordern baserat på valda erbjudanden
+            let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.offer.totalPrice, 0);
+
+            // Skapa en ny order
+            let newOrder = await salesOrdersModel.create({
+                products: orderItems.map(item => item.offer._id.join(', ')),
+                Quantity: orderItems.map(item => item.quantity),
+                TotalPrice: totalPrice,
+                Status: false
+            });
+            console.log("Order created successfully:", newOrder);
+        } catch (err) {
+            console.error("Error creating order:", err);
+        }
+    }
+}
+
+//10.Ship Orders
+else if (input == "10"){
+    console.log("Ship Orders");
+
+    let shipItems = [];
+    let continueShipping = true;
+
+    while (continueShipping) {
+        let salesOrders = await salesOrdersModel.aggregate([
+            {
+                $group: {
+                    _id: "$Products",
+                    totalQuantity: { $sum: 1 },
+                    totalPrice: { $first: "$Price" },
+                    Status: "Status"
+                }
+            }
+        ]);
+
+        salesOrders.forEach((orderToShip, index) => {
+            console.log(`\n${index + 1}. Order: \n Products: ${orderToShip.Products} \n Price: ${orderToShip.totalPrice} \n Price: ${orderToShip.Status}`);
+        });
+
+        let orderInput = p("Choose order to ship (0 to finish): ");
+
+        if (parseInt(orderInput) === 0) {
+            break;
+        }
+    }
+
+  
+}
+
 //12. View suppliers
     else if (input == "12") {
         const aa = await supplierModel.find({})
