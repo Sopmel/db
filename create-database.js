@@ -168,55 +168,40 @@ offersCollection.insertMany(
     ]
 );
 
-const ordersSchema = new mongoose.Schema({
+const salesOrdersSchema = new mongoose.Schema({
     products: { type: [ String ] },
     Quantity: { type: Number },
     TotalPrice: { type: Number },
-    Status:  { type:  Boolean }
+    Status:  { type:  String }
 });
 
-const ordersModel = mongoose.model("Orders", ordersSchema);
+const salesOrdersModel = mongoose.model("salesOrders", salesOrdersSchema);
 
 
 
-let ordersCollection = await ordersModel.createCollection();
+let salesOrdersCollection = await salesOrdersModel.createCollection();
 
-ordersCollection.insertMany(
+salesOrdersCollection.insertMany(
   [     
     {
         products: "Laptop",
         Quantity: 2,
         TotalPrice: 2000,
         Status:  "pending"
-    }
-  ]
-);
-
-const salesSchema = new mongoose.Schema({
-      Offer: {type: String},
-      Quantity: {type: Number},
-      Status: {type: Boolean} 
-});
-
-const salesModel = mongoose.model("Sales Offers", salesSchema);
-
-
-
-let salesCollection = await salesModel.createCollection();
-
-salesCollection.insertMany(
-    [     
-       {
+    },
+    {
         Offer: "Offer 1",
         Quantity: 2,
+        TotalPrice: 3600,
         Status: "pending"
        },
        {
         Offer: "Offer 3",
         Quantity: 1,
+        TotalPrice: 1830,
         Status: "pending"
        }
-    ]
+  ]
 );
 
 
