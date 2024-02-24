@@ -137,6 +137,7 @@ productsCollection.insertMany(
 
 
 const OffersSchema = new mongoose.Schema({
+    Name: { type: String },
     Products: {type: [String]},
     Price: {type: Number},
     Active: {type: Boolean} 
@@ -151,16 +152,19 @@ let offersCollection = await offersModel.createCollection();
 offersCollection.insertMany(
     [     
        {
+        Name: "Offer 1",
         Products: ["Laptop", "Smartphone"],
         Price: 1800,
         Active: true
        },
        {
+        Name: "Offer 2",
         Products: ["T-shirt", "Shampoo"],
         Price: 30,
         Active: true
        },
        {
+        Name: "Offer 3",
         Products: ["Refrigerator", "Smartphone", "Soccer Ball"],
         Price: 1830,
         Active: false
@@ -169,6 +173,7 @@ offersCollection.insertMany(
 );
 
 const salesOrdersSchema = new mongoose.Schema({
+    Offer: { type: [ String ] },
     products: { type: [ String ] },
     Quantity: { type: Number },
     TotalPrice: { type: Number },
@@ -184,19 +189,22 @@ let salesOrdersCollection = await salesOrdersModel.createCollection();
 salesOrdersCollection.insertMany(
   [     
     {
-        products: "Laptop",
+        Offer: "Order",
+        Products: "Laptop",
         Quantity: 2,
         TotalPrice: 2000,
         Status:  "pending"
     },
     {
         Offer: "Offer 1",
+        Products: ["Laptop", "Smartphone"],
         Quantity: 2,
-        TotalPrice: 3600,
+        TotalPrice: 1800,
         Status: "pending"
        },
        {
         Offer: "Offer 3",
+        Products: [ "Refrigerator", "Smartphone", "Soccer Ball"],
         Quantity: 1,
         TotalPrice: 1830,
         Status: "pending"
