@@ -340,16 +340,16 @@ while (runApp) {
 
 
     }
-    else if(input==7){
+    else if (input == 7) {
 
         let allOffers = await offersModel.find();
-        
+
         let allProductsInStockCount = 0;
         let someProductsInStockCount = 0;
         let noProductsInStockCount = 0;
-        
+
         for (let offer of allOffers) {
-             let allProductsInStock = true;
+            let allProductsInStock = true;
             for (let productName of offer.Products) {
                 let product = await productModel.findOne({ Name: productName });
                 if (product.Stock === 0) {
@@ -357,7 +357,7 @@ while (runApp) {
                     break;
                 }
             }
-        
+
             if (allProductsInStock) {
                 allProductsInStockCount++;
             } else {
@@ -376,16 +376,16 @@ while (runApp) {
                 }
             }
         }
-        
-        
+
+
         console.log("Summary:");
         console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
         console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
         console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-        
-        
-        
-        }
+
+
+
+    }
     //8. Create order for products
     else if (input == "8") {
         console.log("Create order for products");
@@ -609,32 +609,13 @@ while (runApp) {
     }
 
     else if (input == "14") {
-
-
-        let getProfit = await productModel.aggregate([{
-            $group: {
-                _id: null,
-                sumOfCost: { "$sum": "$Cost" },
-                sumOfPrice: { "$sum": "$Price" }
-            }
-
-        }, {
-            $addFields: {
-                profit: { $subtract: ["$sumOfPrice", "$sumOfCost"] },
-                profitmultiply: { $multiply: ["$profit", 2] }
-            }
-        }
-
-
-
-        ])//test
-        console.log(getProfit._id);
-        console.log(getProfit.sumOfCost);
-        console.log(getProfit.sumOfPrice);
-        console.log(getProfit);
-        console.log(getProfit);
-
-
+        const allProducts = await productModel.find({})
+        let totalProfit = allProducts.reduce((profit, product) => {
+            console.log(product.Name);
+            console.log(profit);
+            return profit += product.Stock * (product.Price - product.Cost)
+        }, 0)
+        console.log(totalProfit);
     }
     else if (input == "15") {
         runApp = false;
