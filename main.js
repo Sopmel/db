@@ -560,9 +560,6 @@ while (runApp) {
         }
     }
 
-
-
-
     //11. View suppliers
     else if (input == "11") {
         const aa = await supplierModel.find({})
@@ -610,22 +607,9 @@ while (runApp) {
             let proName;
             const productNameByUser = await productModel.find({ SupplierName: proName })
             if (productNameByUser)
-                if (userChoice >= "1") {
+                if (userChoice >= 1) {
                     let selPro = getProduct[userChoice - 1]
                     proName = selPro.Name
-
-                    const productNameByUser = await productModel.find({ SupplierName: proName })
-
-                    console.log("---------------------");
-                    productNameByUser.forEach((data, index) => {
-                        console.log(index + ".");
-                        console.log("Name: " + data.Name);
-                        console.log("Category: ", data.Category);
-                        console.log("Price: ", data.Price);
-                        console.log("Cost: ", data.Cost);
-                        console.log("Stock: ", data.Stock);
-                        console.log("---------------------");
-                    })
                 }
                 else {
                     console.log("error");
@@ -637,10 +621,10 @@ while (runApp) {
 
                 let totalCost = 0
 
-                for (const Cookie of salesOrder.Products) {
+                for (const saleOrderPro of salesOrder.Products) {
                     let productCost = 0;
                     try {
-                        productCost = await productModel.findOne({ Name: Cookie });
+                        productCost = await productModel.findOne({ Name: saleOrderPro });
 
                         totalCost += productCost.Cost
 
@@ -653,9 +637,9 @@ while (runApp) {
                 const profitTax = (salesOrder.TotalPrice - totalCost) * 0.8
                 console.log("-------------------------------------------------------------------------------------------");
                 console.log(salesOrder.Products.join(" and "),
-                    "Profit (including tax):", Profit,
+                    "Profit (including tax):", profitTax,
                     "\n\n ---------------------------> profit (excluding tax):",
-                    profitTax,
+                    Profit,
                     "<--------------------------------\n");
 
             }
