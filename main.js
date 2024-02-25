@@ -280,7 +280,6 @@ while (runApp) {
             console.log("error");
         }
 
-
     }
     //5. View all offers within a price range
     else if (input == "5") {
@@ -301,6 +300,48 @@ while (runApp) {
         let showOffers = await offersModel.find({ Products: { $in: productNames } }).select('-_id')
         console.log(showOffers);
 
+    }
+    else if (input == 7) {
+
+        let allOffers = await offersModel.find();
+
+        let allProductsInStockCount = 0;
+        let someProductsInStockCount = 0;
+        let noProductsInStockCount = 0;
+
+        for (let offer of allOffers) {
+            let allProductsInStock = true;
+            for (let productName of offer.Products) {
+                let product = await productModel.findOne({ Name: productName });
+                if (product.Stock === 0) {
+                    allProductsInStock = false;
+                    break;
+                }
+            }
+
+            if (allProductsInStock) {
+                allProductsInStockCount++;
+            } else {
+                let someProductsInStock = false;
+                for (let productName of offer.Products) {
+                    let product = await productModel.findOne({ Name: productName });
+                    if (product.Stock > 0) {
+                        someProductsInStock = true;
+                        break;
+                    }
+                }
+                if (someProductsInStock) {
+                    someProductsInStockCount++;
+                } else {
+                    noProductsInStockCount++;
+                }
+            }
+        }
+
+        console.log("Summary:");
+        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
+        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
+        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
 
     }
     else if (input == 7) {
@@ -340,59 +381,10 @@ while (runApp) {
             }
         }
 
-
         console.log("Summary:");
         console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
         console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
         console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-
-
-    }
-    else if (input == 7) {
-
-        let allOffers = await offersModel.find();
-
-        let allProductsInStockCount = 0;
-        let someProductsInStockCount = 0;
-        let noProductsInStockCount = 0;
-
-        for (let offer of allOffers) {
-            let allProductsInStock = true;
-            for (let productName of offer.Products) {
-                let product = await productModel.findOne({ Name: productName });
-                if (product.Stock === 0) {
-                    allProductsInStock = false;
-                    break;
-                }
-            }
-
-            if (allProductsInStock) {
-                allProductsInStockCount++;
-            } else {
-                let someProductsInStock = false;
-                for (let productName of offer.Products) {
-                    let product = await productModel.findOne({ Name: productName });
-                    if (product.Stock > 0) {
-                        someProductsInStock = true;
-                        break;
-                    }
-                }
-                if (someProductsInStock) {
-                    someProductsInStockCount++;
-                } else {
-                    noProductsInStockCount++;
-                }
-            }
-        }
-
-
-        console.log("Summary:");
-        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
-        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
-        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-
 
     }
     //8. Create order for products
@@ -659,7 +651,6 @@ while (runApp) {
 
         let allSales = await salesOrdersModel.find();
 
-
         for (let sale of allSales) {
             let orderNumber = sale._id;
             let offer = await offersModel.findOne({});
@@ -673,7 +664,6 @@ while (runApp) {
             console.log(`Total cost: ${totalCost}\n`);
         }
 
-
     }
 
     else if (input == "13") {
@@ -686,20 +676,38 @@ while (runApp) {
         console.log(`-----------`);
 
         while (true) {
-            const x = p("Choose product (by writing its name), or press 0 to break: ");
-            if (x === "0") {
+
+            const userChoice = p("Choose product (type the number to get the product),\n or press 0 to break (remember some products are not with offers\n for an exempel you at the begining the database there are no ordersales for T-shirt nor Shampoo ): ");
+            if (userChoice === "0") {
                 break;
             }
+            let proName;
+            const productNameByUser = await productModel.find({ SupplierName: proName })
+            if (productNameByUser)
+            if (userChoice >= "1") {
+                let selPro = getProduct[userChoice - 1]
+                proName = selPro.Name
 
+                const productNameByUser = await productModel.find({ SupplierName: proName })
 
+                console.log("---------------------");
+                productNameByUser.forEach((data, index) => {
+                    console.log(index + ".");
+                    console.log("Name: " + data.Name);
+                    console.log("Category: ", data.Category);
+                    console.log("Price: ", data.Price);
+                    console.log("Cost: ", data.Cost);
+                    console.log("Stock: ", data.Stock);
+                    console.log("---------------------");
+                })
+            }
+            else {
+                console.log("error");
+            }
 
+            const getSalesOrders = await salesOrdersModel.find({ $nor: [{ Offer: "Order" }], Products: { $in: [proName] } });
 
-
-
-            const getsalesOrders = await salesOrdersModel.find({ $nor: [{ Offer: "Order" }], Products: { $in: [x] } });
-
-
-            for (const salesOrder of getsalesOrders) {
+            for (const salesOrder of getSalesOrders) {
 
                 let totalCost = 0
 
@@ -710,20 +718,16 @@ while (runApp) {
 
                         totalCost += productCost.Cost
 
-
                     } catch (error) {
                         console.error('Error finding product cost:', error);
                     }
-
-
-
 
                 }
                 const Profit = salesOrder.TotalPrice - totalCost
                 const profitTax = (salesOrder.TotalPrice - totalCost) * 1.2
                 console.log("-------------------------------------------------------------------------------------------");
                 console.log(salesOrder.Products.join(" and "),
-                    " Just for: ", Profit,
+                    "Just for:", Profit,
                     "Of profit. of course We care deeply our costumers so much!\n Instead of  55% tax on offer we only take 20%. \n\n ---------------------------> The Price will be:",
                     profitTax,
                     "<--------------------------------\n");
@@ -740,8 +744,6 @@ while (runApp) {
     else if (input == "15") {
         let allProducts = await productModel.find({})
 
-
-
         console.log("Here is a list of all the products: ");
         console.log(allProducts);
 
@@ -752,11 +754,3 @@ while (runApp) {
     }
 
 };
-
-
-
-
-
-
-
-
