@@ -524,7 +524,9 @@ while (runApp) {
                     continue;
                 }
 
-                orderItems.push({ offer: selectedOffer, quantity });
+                let offerName = `Offer ${orderItems.length + 1}`;
+                orderItems.push({ offer: selectedOffer, quantity, offerName });
+
             } else {
                 console.log("Invalid option for Offer.");
             }
@@ -543,15 +545,13 @@ while (runApp) {
              // Hämta erbjudandets namn från varje orderItem
             let offerNames = orderItems.map(item => item.offer.Offer);
 
-            console.log(orderItems)
-
             // Skapa en ny order
             let newOrder = await salesOrdersModel.create({
-                Offer: offerNames,
+                Offer: orderItems.map(item => item.offerName),
                 Products: products,
                 Quantity: orderItems.map(item => item.quantity),
                 TotalPrice: totalPrice,
-                Status: false
+                Status: "pending"
             });
             console.log("Order created successfully:", newOrder);
         } catch (err) {
@@ -559,31 +559,33 @@ while (runApp) {
         }
     }
 }
+
+
 //10. ship products
 else if (input == "10") {
     console.log("\n0Ship Orders");
 
-        while (true) {
-            // Hämta alla ordrar med status "pending"
-            let salesOrders = await salesOrdersModel.find({ Status: "pending" });
+    while (true) {
+        // Hämta alla ordrar med status "pending"
+        let salesOrders = await salesOrdersModel.find({ Status: "pending" });
 
-            if (salesOrders.length === 0) {
-                console.log("No pending orders to ship.");
-                break;
-            }
+        if (salesOrders.length === 0) {
+            console.log("No pending orders to ship.");
+            break;
+        }
 
         // Visa alla ordrar med status "pending"
         console.log("\nPending Orders:");
         salesOrders.forEach((orderToShip, index) => {
             console.log(`\n${index + 1}.`);
-            console.log(`   Name: ${orderToShip.Offer}`);
+            console.log(`   Name: ${orderToShip.Offer ? orderToShip.Offer : "Order " + (index + 1)}`);
             console.log(`   Products: ${orderToShip.Products}`);
             console.log(`   Total Price: ${orderToShip.TotalPrice}`);
             console.log(`   Status: ${orderToShip.Status}`);
         });
 
         let orderIndex = parseInt(p("\nSelect the order to ship (0 to quit): "));
-        
+
         if (parseInt(orderIndex) === 0) {
             console.log("Closing Orders");
             break;
@@ -593,63 +595,48 @@ else if (input == "10") {
             continue;
         }
 
-            let selectedOrder = salesOrders[orderIndex - 1];
+        let selectedOrder = salesOrders[orderIndex - 1];
 
-            // Hämta produkterna i den valda ordern
-            let productsInOrder = await productModel.find({ Name: { $in: selectedOrder.Products } });
+        // Variabel för att spåra om hela ordern kan skickas
+        let canShipOrder = true;
 
-            // Kontrollera om tillräckligt med lager finns tillgängligt för varje produkt i ordern
-            let canShipOrder = true;
-            for (let product of productsInOrder) {
-                let orderedQuantity = 0;
-                if (Array.isArray(selectedOrder.Products)) {
-                    orderedQuantity = selectedOrder.Quantity[selectedOrder.Products.indexOf(product.Name)];
-                } else if (selectedOrder.Products === product.Name) {
-                    orderedQuantity = selectedOrder.Quantity;
+        // Loopa igenom varje produkt i ordern för att kontrollera lagerstatusen
+        for (let i = 0; i < selectedOrder.Products.length; i++) {
+            let productName = selectedOrder.Products[i];
+            let orderedQuantity = selectedOrder.Quantity[selectedOrder.Products.indexOf(productName)]; // Hämta kvantiteten för den aktuella produkten
+
+            let productInOrder = await productModel.findOne({ Name: productName });
+
+            // Kontrollera om produkten finns och om det finns tillräckligt med lager för den beställda mängden
+            if (productInOrder && productInOrder.Stock >= orderedQuantity) {
+                // Uppdatera lagerstatusen för produkten
+                let updatedStock = productInOrder.Stock - orderedQuantity;
+                await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
+                console.log(`Updated stock for product ${productName}: ${updatedStock}`);
+
+                if (updatedStock === 0) {
+                    // Hämta alla erbjudanden som innehåller den slutsålda produkten
+                    let affectedOffers = await offersModel.find({ Products: productName });
+
+                    // Loopa igenom varje påverkat erbjudande och uppdatera Active-fältet
+                    for (let offer of affectedOffers) {
+                        await offersModel.updateOne({ _id: offer._id }, { $set: { Active: false } });
+                        console.log(`Offer ${offer.Name} is now inactive due to zero stock.`);
+                    }
                 }
-
-            // Kontrollera lagerstatusen för produkten
-            if (product.Stock < orderedQuantity) {
-                console.log(`\nCannot ship order ${selectedOrder._id}. Insufficient stock for product ${product.Name}.`);
-                canShipOrder = false;
-                break;
+            } else {
+                console.log(`\nCannot ship order. Insufficient stock for product ${productName}.`);
+                canShipOrder = false; // Sätt canShipOrder till false om det inte finns tillräckligt med lager för minst en produkt
+                break; // Avbryt loopen om en produkt saknar tillräckligt med lager
             }
         }
 
+        // Uppdatera statusen till "shipped" endast om canShipOrder är true
         if (canShipOrder) {
-            // Uppdatera statusen för den valda ordern till "shipped"
             await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
             console.log(`\nOrder ${selectedOrder.Name} has been marked as shipped.`);
-
-                // Loopa igenom varje produkt i ordern för att uppdatera lagerstatusen
-                for (let productName of selectedOrder.Products) {
-                    let orderedQuantity = selectedOrder.Quantity;
-
-
-                    let productInOrder = await productModel.findOne({ Name: productName });
-
-                    // Kontrollera om produkten finns och om det finns tillräckligt med lager för den beställda mängden
-                    if (productInOrder && productInOrder.Stock >= orderedQuantity) {
-                        // Uppdatera lagerstatusen för produkten
-                        let updatedStock = productInOrder.Stock - orderedQuantity;
-                        await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
-                        console.log(`Updated stock for product ${productName}: ${updatedStock}`);
-
-                    if (updatedStock === 0) {
-                        // Hämta alla erbjudanden som innehåller den slutsålda produkten
-                        let affectedOffers = await offersModel.find({ Products: productName });
-                    
-                        // Loopa igenom varje påverkat erbjudande och uppdatera Active-fältet
-                        for (let offer of affectedOffers) {
-                            await offersModel.updateOne({ _id: offer._id }, { $set: { Active: false } });
-                            console.log(`Offer ${offer.Name} is now inactive due to zero stock.`);
-                        }
-                    }
-                } else {
-                    console.log(`\nCannot ship order. Insufficient stock for product ${productName}.`);
-                }
-            
-            }
+        } else {
+            console.log("\nCannot mark order as shipped due to insufficient stock for one or more products.");
         }
     }
 }
