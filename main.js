@@ -63,11 +63,10 @@ console.log("7. View the number of offers based on the number of its products in
 console.log("8. Create order for products")
 console.log("9. Create order for offers")
 console.log("10. Ship orders")
-console.log("11. Add a new supplier")
-console.log("12. View suppliers")
-console.log("13. View all sales")
-console.log("14. View sum of all profits")
-console.log("15. Close app")
+console.log("11. View suppliers")
+console.log("12. View all sales")
+console.log("13. View sum of all profits")
+console.log("14. Close app")
 
 
 let runApp = true;
@@ -345,7 +344,7 @@ console.log(SupplierNameByUser);
         }
     //8. Create order for products
     else if (input == "8") {
-        console.log("Create order for products");
+        console.log("\nCreate order for products");
 
 
     let orderItems = [];
@@ -357,7 +356,7 @@ console.log(SupplierNameByUser);
             console.log(`${index + 1}. ${category.Name}`);
         });
 
-        let orderInput = p("Choose category to view products( 0 to finish): ");
+        let orderInput = p("\nChoose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
                 console.log("Exiting order creation.");
@@ -373,20 +372,20 @@ console.log(SupplierNameByUser);
                 ]);
 
                 if (products.length > 0) {
-                    console.log(`Products in category "${selectedCategory.Name}":`);
+                    console.log(`\nProducts in category "${selectedCategory.Name}":`);
                     products.forEach((product, index) => {
                         console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
                     });
 
                     while (true) {
-                        let productIndex = parseInt(p("Choose product to add (0 to exit): "))
+                        let productIndex = parseInt(p("\nChoose product to add (0 to exit): "))
 
                         if ( productIndex === 0 ) break;
                         if ( productIndex < 1 || productIndex > products.length ){
                             console.log("Invalid number. "); continue;
                         }
 
-                        let quantity = parseInt(p("How many would you like to add? "));
+                        let quantity = parseInt(p("\nHow many would you like to add? "));
                         if (quantity <= 0) {
                             console.log("number must be greater than 0. "); continue;
                         }
@@ -396,16 +395,16 @@ console.log(SupplierNameByUser);
                     }
 
                 } else {
-                    console.log("No products in this Category. ");
+                    console.log("\nNo products in this Category. ");
                 }
             } catch (err) {
-                console.log("Error fetching Products.");
+                console.log("\nError fetching Products.");
             }
         } else {
-            console.log("Invalid Category. ");
+            console.log("\nInvalid Category. ");
         }
 
-        let continueInput = p("Do you want to add more products? (yes/no): ");
+        let continueInput = p("\nDo you want to add more products? (yes/no): ");
         continueAdding = continueInput.toLowerCase() === 'yes';
     }
 
@@ -490,10 +489,17 @@ else if (input == "9") {
             // Beräkna den totala priset för ordern baserat på valda erbjudanden
             let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.offer.totalPrice, 0);
 
+             // Hämta produkterna från varje orderItem
+            let products = orderItems.map(item => item.offer._id).flat();
+             // Hämta erbjudandets namn från varje orderItem
+            let offerNames = orderItems.map(item => item.offer.Offer);
+
+            console.log(orderItems)
+
             // Skapa en ny order
             let newOrder = await salesOrdersModel.create({
-                Offer: "Order",
-                Products: orderItems.map(item => item.offer.Name).flat(),
+                Offer: offerNames,
+                Products: products,
                 Quantity: orderItems.map(item => item.quantity),
                 TotalPrice: totalPrice,
                 Status: false
@@ -506,7 +512,7 @@ else if (input == "9") {
 }
 //10. ship products
 else if (input == "10") {
-    console.log("Ship Orders");
+    console.log("\n0Ship Orders");
 
     while (true) {
         // Hämta alla ordrar med status "pending"
@@ -518,23 +524,23 @@ else if (input == "10") {
         }
 
         // Visa alla ordrar med status "pending"
-        console.log("Pending Orders:");
+        console.log("\nPending Orders:");
         salesOrders.forEach((orderToShip, index) => {
-            console.log(`${index + 1}. Order ID: ${orderToShip._id}`);
+            console.log(`\n${index + 1}.`);
             console.log(`   Name: ${orderToShip.Offer}`);
             console.log(`   Products: ${orderToShip.Products}`);
             console.log(`   Total Price: ${orderToShip.TotalPrice}`);
             console.log(`   Status: ${orderToShip.Status}`);
         });
 
-        let orderIndex = parseInt(p("Select the order to ship (0 to quit): "));
+        let orderIndex = parseInt(p("\nSelect the order to ship (0 to quit): "));
         
         if (parseInt(orderIndex) === 0) {
             console.log("Closing Orders");
             break;
         }
         if (isNaN(orderIndex) || orderIndex < 1 || orderIndex > salesOrders.length) {
-            console.log("Invalid order number. Please try again.");
+            console.log("\nInvalid order number. Please try again.");
             continue;
         }
 
@@ -555,7 +561,7 @@ else if (input == "10") {
 
             // Kontrollera lagerstatusen för produkten
             if (product.Stock < orderedQuantity) {
-                console.log(`Cannot ship order ${selectedOrder._id}. Insufficient stock for product ${product.Name}.`);
+                console.log(`\nCannot ship order ${selectedOrder._id}. Insufficient stock for product ${product.Name}.`);
                 canShipOrder = false;
                 break;
             }
@@ -564,7 +570,7 @@ else if (input == "10") {
         if (canShipOrder) {
             // Uppdatera statusen för den valda ordern till "shipped"
             await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
-            console.log(`Order ${selectedOrder._id} has been marked as shipped.`);
+            console.log(`\nOrder ${selectedOrder.Name} has been marked as shipped.`);
 
             // Loopa igenom varje produkt i ordern för att uppdatera lagerstatusen
             for (let productName of selectedOrder.Products) {
@@ -580,13 +586,18 @@ else if (input == "10") {
                     await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
                     console.log(`Updated stock for product ${productName}: ${updatedStock}`);
 
-                 // Kontrollera om lagret är tomt och uppdatera Active-fältet i erbjudandet
                     if (updatedStock === 0) {
-                       await offersModel.updateOne({ Name: selectedOrder.Offer }, { $set: { Active: false } });
-                       console.log(`Offer ${selectedOrder.Offer} is now inactive due to zero stock.`);
+                        // Hämta alla erbjudanden som innehåller den slutsålda produkten
+                        let affectedOffers = await offersModel.find({ Products: productName });
+                    
+                        // Loopa igenom varje påverkat erbjudande och uppdatera Active-fältet
+                        for (let offer of affectedOffers) {
+                            await offersModel.updateOne({ _id: offer._id }, { $set: { Active: false } });
+                            console.log(`Offer ${offer.Name} is now inactive due to zero stock.`);
+                        }
                     }
                 } else {
-                    console.log(`Cannot ship order ${selectedOrder._id}. Insufficient stock for product ${productName}.`);
+                    console.log(`\nCannot ship order. Insufficient stock for product ${productName}.`);
                 }
             
             }
@@ -594,8 +605,8 @@ else if (input == "10") {
     }
 }
 
-//12. View suppliers
-    else if (input == "12") {
+//11. View suppliers
+    else if (input == "11") {
         const aa = await supplierModel.find({})
         aa.forEach((data, index) => {
             console.log(index + 1);
@@ -604,7 +615,7 @@ else if (input == "10") {
             console.log("---------------------");
         })
     }
-    else if (input == "13") {
+    else if (input == "12") {
 
         let allSales = await salesModel.find();
 
@@ -625,7 +636,7 @@ else if (input == "10") {
 
     }
 
-    else if (input == "14") {
+    else if (input == "13") {
 
 
         let getProfit = await productModel.aggregate([{
@@ -653,7 +664,7 @@ else if (input == "10") {
 
 
     }
-    else if (input == "15") {
+    else if (input == "14") {
         runApp = false;
         mongoose.connection.close()
     }
