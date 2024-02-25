@@ -80,15 +80,15 @@ while (runApp) {
 
     // 1. add new Category
     if (input == "1") {
-        let newCategoryName = p("Add Name of new Category: ");
-        let newCategoryDescription = p("Add Description to new Category: ")
+        let newCategoryName = p(" \n Add Name of new Category: ");
+        let newCategoryDescription = p(" \n Add Description to new Category: ")
         try {
             let newCategory = await categoriesModel.create({
                 Name: newCategoryName,
                 Description: newCategoryDescription
             });
 
-            console.log("Category added Succesfully!")
+            console.log(" \nCategory added Succesfully!")
 
             console.log(newCategory)
 
@@ -99,7 +99,7 @@ while (runApp) {
     //add new Product
     else if (input === "2") {
 
-        let newName = p("Add Name of product: ");
+        let newName = p(" \n Add Name of product: ");
 
         console.log("Choose a Category for the new product:");
         console.log("1. Add new Category");
@@ -166,7 +166,7 @@ while (runApp) {
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
 
                 if (existingSupplier) {
-                    console.log("Supplier already exists.");
+                    console.log(" \n Supplier already exists.");
                     // Om supplier finns, använd den
                     await productModel.create({
                         Name: newName,
@@ -176,7 +176,7 @@ while (runApp) {
                         Stock: newStock,
                         SupplierName: existingSupplier.Name
                     });
-                    console.log("Product added successfully!");
+                    console.log(" \n Product added successfully!");
                 } else {
                     // Om supplier inte finns, skapa ny
                     let newSupplier = await supplierModel.create({
@@ -192,7 +192,7 @@ while (runApp) {
                         Stock: newStock,
                         SupplierName: newSupplier.Name
                     });
-                    console.log("Supplier and product added successfully!");
+                    console.log(" \n Supplier and product added successfully!");
                 }
             } catch (err) {
                 console.error("Error:", err);
@@ -408,7 +408,7 @@ while (runApp) {
             let orderInput = p("\nChoose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
-                console.log("Exiting order creation.");
+                
                 break;
             }
 
@@ -421,13 +421,13 @@ while (runApp) {
                     ]);
 
                     if (products.length > 0) {
-                        console.log(`\nProducts in category "${selectedCategory.Name}":`);
+                        console.log(`\n Products in category "${selectedCategory.Name}":`);
                         products.forEach((product, index) => {
                             console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
                         });
 
                         while (true) {
-                            let productIndex = parseInt(p("\nChoose product to add (0 to exit): "))
+                            let productIndex = parseInt(p("\nChoose product to add (0 to exit category): "))
 
                             if (productIndex === 0) break;
                             if (productIndex < 1 || productIndex > products.length) {
@@ -488,7 +488,7 @@ while (runApp) {
 
     //9. Create order for offers
     else if (input == "9") {
-        console.log("Create order for offers");
+        console.log("\n Create order for offers");
 
         let orderItems = [];
         let continueAddingOffer = true;
@@ -508,19 +508,18 @@ while (runApp) {
                 console.log(`${index + 1}. Offer: \n Products: ${offer._id.join(', ')} \n Price: ${offer.totalPrice}`);
             });
 
-            let orderInput = p("Choose offer to add (0 to finish): ");
+            let orderInput = p(" \nChoose offer to add (0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
-                console.log("Exiting offer creation.");
                 break;
             }
 
             if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= offers.length) {
                 let selectedOffer = offers[parseInt(orderInput) - 1];
 
-                let quantity = parseInt(p("How many would you like to add? "));
+                let quantity = parseInt(p("\n How many would you like to add? "));
                 if (quantity <= 0) {
-                    console.log("Quantity must be greater than 0.");
+                    console.log(" \n Quantity must be greater than 0.");
                     continue;
                 }
 
@@ -531,7 +530,7 @@ while (runApp) {
                 console.log("Invalid option for Offer.");
             }
 
-            let continueInput = p("Do you want to add more offers? (yes/no): ");
+            let continueInput = p("\n Do you want to add more offers? (yes/no): ");
             continueAddingOffer = continueInput.toLowerCase() === 'yes';
         }
 
