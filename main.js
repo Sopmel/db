@@ -232,7 +232,7 @@ while (runApp) {
         if (UsersChoice >= "1") {
             let selCat = allCategories[UsersChoice - 1]
 
-            console.log(selCat);
+            
             let catName = selCat.Name
 
             const productNameByUser = await productModel.find({ Category: catName })
@@ -296,6 +296,7 @@ while (runApp) {
 //6. View all offers that contain a product from a specific category
     else if (input == '6') {
         let newOffers = await offersModel.find({})
+        
 
         let chooseCategory = p('Select the category you want to see offers from?')
         let productsInCategory = await productModel.find({ Category: chooseCategory });
