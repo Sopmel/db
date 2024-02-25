@@ -80,15 +80,15 @@ while (runApp) {
 
     // 1. add new Category
     if (input == "1") {
-        let newCategoryName = p(" \n Add Name of new Category: ");
-        let newCategoryDescription = p(" \n Add Description to new Category: ")
+        let newCategoryName = p("  Add Name of new Category: ");
+        let newCategoryDescription = p(" Add Description to new Category: ")
         try {
             let newCategory = await categoriesModel.create({
                 Name: newCategoryName,
                 Description: newCategoryDescription
             });
 
-            console.log(" \nCategory added Succesfully!")
+            console.log(" Category added Succesfully!")
 
             console.log(newCategory)
 
@@ -192,7 +192,7 @@ while (runApp) {
                         Stock: newStock,
                         SupplierName: newSupplier.Name
                     });
-                    console.log(" \n Supplier and product added successfully!");
+                    console.log(" Supplier and product added successfully!");
                 }
             } catch (err) {
                 console.error("Error:", err);
@@ -305,7 +305,7 @@ while (runApp) {
         console.log(showOffers);
 
     }
-    else if (input == 7) {
+    else if (input == "7") {
 
         let allOffers = await offersModel.find();
 
@@ -348,49 +348,7 @@ while (runApp) {
         console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
 
     }
-    else if (input == 7) {
 
-        let allOffers = await offersModel.find();
-
-        let allProductsInStockCount = 0;
-        let someProductsInStockCount = 0;
-        let noProductsInStockCount = 0;
-
-        for (let offer of allOffers) {
-            let allProductsInStock = true;
-            for (let productName of offer.Products) {
-                let product = await productModel.findOne({ Name: productName });
-                if (product.Stock === 0) {
-                    allProductsInStock = false;
-                    break;
-                }
-            }
-
-            if (allProductsInStock) {
-                allProductsInStockCount++;
-            } else {
-                let someProductsInStock = false;
-                for (let productName of offer.Products) {
-                    let product = await productModel.findOne({ Name: productName });
-                    if (product.Stock > 0) {
-                        someProductsInStock = true;
-                        break;
-                    }
-                }
-                if (someProductsInStock) {
-                    someProductsInStockCount++;
-                } else {
-                    noProductsInStockCount++;
-                }
-            }
-        }
-
-        console.log("Summary:");
-        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
-        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
-        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-    }
     //8. Create order for products
     else if (input == "8") {
         console.log("Create order for products");
@@ -405,7 +363,7 @@ while (runApp) {
                 console.log(`${index + 1}. ${category.Name}`);
             });
 
-            let orderInput = p("\nChoose category to view products( 0 to finish): ");
+            let orderInput = p("Choose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
                 
@@ -444,13 +402,13 @@ while (runApp) {
                         }
 
                     } else {
-                        console.log("\nNo products in this Category. ");
+                        console.log("No products in this Category. ");
                     }
                 } catch (err) {
-                    console.log("\nError fetching Products.");
+                    console.log("Error fetching Products.");
                 }
             } else {
-                console.log("\nInvalid Category. ");
+                console.log("Invalid Category. ");
             }
 
             let continueInput = p("\nDo you want to add more products? (yes/no): ");
@@ -508,7 +466,7 @@ while (runApp) {
                 console.log(`${index + 1}. Offer: \n Products: ${offer._id.join(', ')} \n Price: ${offer.totalPrice}`);
             });
 
-            let orderInput = p(" \nChoose offer to add (0 to finish): ");
+            let orderInput = p(" Choose offer to add (0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
                 break;
@@ -517,9 +475,9 @@ while (runApp) {
             if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= offers.length) {
                 let selectedOffer = offers[parseInt(orderInput) - 1];
 
-                let quantity = parseInt(p("\n How many would you like to add? "));
+                let quantity = parseInt(p("How many would you like to add? "));
                 if (quantity <= 0) {
-                    console.log(" \n Quantity must be greater than 0.");
+                    console.log("  Quantity must be greater than 0.");
                     continue;
                 }
 
@@ -583,7 +541,7 @@ else if (input == "10") {
             console.log(`   Status: ${orderToShip.Status}`);
         });
 
-        let orderIndex = parseInt(p("\nSelect the order to ship (0 to quit): "));
+        let orderIndex = parseInt(p("Select the order to ship (0 to quit): "));
 
         if (parseInt(orderIndex) === 0) {
             console.log("Closing Orders");
@@ -632,7 +590,7 @@ else if (input == "10") {
                     }
                 }
             } else {
-                console.log(`\n Cannot ship order. Insufficient stock for product ${productName}.`);
+                console.log(` Cannot ship order. Insufficient stock for product ${productName}.`);
                 canShipOrder = false; // Sätt canShipOrder till false om det inte finns tillräckligt med lager för minst en produkt
                 break; // Avbryt loopen om en produkt saknar tillräckligt med lager
             }
@@ -643,7 +601,7 @@ else if (input == "10") {
             await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
             console.log(`\nYour Order has been marked as shipped.`);
         } else {
-            console.log("\nCannot mark order as shipped due to insufficient stock for one or more products.");
+            console.log("Cannot mark order as shipped due to insufficient stock for one or more products.");
         }
     }
 }
