@@ -217,27 +217,40 @@ while (runApp) {
     }
     //3. View products by category
     else if (input == "3") {
-        const GroupCategory = await productModel.aggregate([
-            {
-                $group: {
-                    _id: "$Category"
-                }
-            }
-        ])
 
 
-        GroupCategory.forEach((data, index) => {
+        const allCategories = await categoriesModel.find({})
+        allCategories.forEach((data, index) => {
             console.log();
-            console.log(index + ". " + data._id);
+            console.log((index + 1) + ". " + data.Name);
             console.log();
             console.log("---------------------");
         })
 
-        const UsersChoice = p("Choose a category: ")
+        const UsersChoice = p("Write the number of the category you wish to select: ): ")
 
-        const GetProducts = await productModel.find({ Category: UsersChoice })
+        if (UsersChoice >= "1") {
+            let selCat = allCategories[UsersChoice - 1]
 
-        console.log(GetProducts);
+            console.log(selCat);
+            let catName = selCat.Name
+
+            const productNameByUser = await productModel.find({ Category: catName })
+            console.log("---------------------");
+            productNameByUser.forEach((data, index) => {
+                console.log(index + ".");
+                console.log("Name: " + data.Name);
+                console.log("Category: ", data.Category);
+                console.log("Price: ", data.Price);
+                console.log("Cost: ", data.Cost);
+                console.log("Stock: ", data.Stock);
+                console.log("---------------------");
+            })
+        }
+        else {
+            console.log("error");
+        }
+
     }
     //4. View products by supplier
     else if (input == "4") {
@@ -247,35 +260,29 @@ while (runApp) {
             console.log((index + 1) + ". " + data.Name);
 
         })
-        const userUhoice = Number(p("Choose supplier to wiew products: "))
+        const userChoice = Number(p("Choose supplier to view products (Type the number that is aside the supplier name): "))
 
 
-        if (userUhoice >= "1") {
-            let selsup = allSupplier[userUhoice - 1]
+        if (userChoice >= "1") {
+            let selsup = allSupplier[userChoice - 1]
             let supname = selsup.Name
 
-            const SupplierNameByUser = await productModel.find({ SupplierName: supname })
-            console.log(SupplierNameByUser);
+            const productNameByUser = await productModel.find({ SupplierName: supname })
+
+            console.log("---------------------");
+            productNameByUser.forEach((data, index) => {
+                console.log(index + ".");
+                console.log("Name: " + data.Name);
+                console.log("Category: ", data.Category);
+                console.log("Price: ", data.Price);
+                console.log("Cost: ", data.Cost);
+                console.log("Stock: ", data.Stock);
+                console.log("---------------------");
+            })
         }
         else {
             console.log("error");
         }
-
-        // const SupplierNameByUser = await productModel.find({ SupplierName: userUhoice })
-
-
-        // SupplierNameByUser.forEach((product) => {
-        //     console.log("-----------------------");
-        //     console.log(product.Name);
-        //     console.log(product.Category);
-        //     console.log(product.Price);
-        //     console.log(product.Cost);
-        //     console.log(product.Stock);
-
-
-
-        // })
-
 
     }
     //5. View all offers within a price range
@@ -297,6 +304,48 @@ while (runApp) {
         let showOffers = await offersModel.find({ Products: { $in: productNames } }).select('-_id')
         console.log(showOffers);
 
+    }
+    else if (input == 7) {
+
+        let allOffers = await offersModel.find();
+
+        let allProductsInStockCount = 0;
+        let someProductsInStockCount = 0;
+        let noProductsInStockCount = 0;
+
+        for (let offer of allOffers) {
+            let allProductsInStock = true;
+            for (let productName of offer.Products) {
+                let product = await productModel.findOne({ Name: productName });
+                if (product.Stock === 0) {
+                    allProductsInStock = false;
+                    break;
+                }
+            }
+
+            if (allProductsInStock) {
+                allProductsInStockCount++;
+            } else {
+                let someProductsInStock = false;
+                for (let productName of offer.Products) {
+                    let product = await productModel.findOne({ Name: productName });
+                    if (product.Stock > 0) {
+                        someProductsInStock = true;
+                        break;
+                    }
+                }
+                if (someProductsInStock) {
+                    someProductsInStockCount++;
+                } else {
+                    noProductsInStockCount++;
+                }
+            }
+        }
+
+        console.log("Summary:");
+        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
+        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
+        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
 
     }
     else if (input == 7) {
@@ -336,59 +385,10 @@ while (runApp) {
             }
         }
 
-
         console.log("Summary:");
         console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
         console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
         console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-
-
-    }
-    else if (input == 7) {
-
-        let allOffers = await offersModel.find();
-
-        let allProductsInStockCount = 0;
-        let someProductsInStockCount = 0;
-        let noProductsInStockCount = 0;
-
-        for (let offer of allOffers) {
-            let allProductsInStock = true;
-            for (let productName of offer.Products) {
-                let product = await productModel.findOne({ Name: productName });
-                if (product.Stock === 0) {
-                    allProductsInStock = false;
-                    break;
-                }
-            }
-
-            if (allProductsInStock) {
-                allProductsInStockCount++;
-            } else {
-                let someProductsInStock = false;
-                for (let productName of offer.Products) {
-                    let product = await productModel.findOne({ Name: productName });
-                    if (product.Stock > 0) {
-                        someProductsInStock = true;
-                        break;
-                    }
-                }
-                if (someProductsInStock) {
-                    someProductsInStockCount++;
-                } else {
-                    noProductsInStockCount++;
-                }
-            }
-        }
-
-
-        console.log("Summary:");
-        console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
-        console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
-        console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-
 
     }
     //8. Create order for products
@@ -653,8 +653,7 @@ else if (input == "10") {
     }
     else if (input == "12") {
 
-        let allSales = await salesModel.find();
-
+        let allSales = await salesOrdersModel.find();
 
         for (let sale of allSales) {
             let orderNumber = sale._id;
@@ -669,34 +668,50 @@ else if (input == "10") {
             console.log(`Total cost: ${totalCost}\n`);
         }
 
-
     }
 
     else if (input == "13") {
 
-
         const getproduct = await productModel.find({});
 
-        getproduct.forEach((product, index) => {
+        getProduct.forEach((product, index) => {
             console.log(`-----------\n${index + 1}. ${product.Name}`);
         });
         console.log(`-----------`);
 
         while (true) {
-            const x = p("Choose product (by writing its name), or press 0 to break: ");
-            if (x === "0") {
+
+            const userChoice = p("Choose product (type the number to get the product),\n or press 0 to break (remember some products are not with offers\n for an exempel you at the begining the database there are no ordersales for T-shirt nor Shampoo ): ");
+            if (userChoice === "0") {
                 break;
             }
+            let proName;
+            const productNameByUser = await productModel.find({ SupplierName: proName })
+            if (productNameByUser)
+            if (userChoice >= "1") {
+                let selPro = getProduct[userChoice - 1]
+                proName = selPro.Name
 
+                const productNameByUser = await productModel.find({ SupplierName: proName })
 
-            let totalProfitFromOffers = 0;
+                console.log("---------------------");
+                productNameByUser.forEach((data, index) => {
+                    console.log(index + ".");
+                    console.log("Name: " + data.Name);
+                    console.log("Category: ", data.Category);
+                    console.log("Price: ", data.Price);
+                    console.log("Cost: ", data.Cost);
+                    console.log("Stock: ", data.Stock);
+                    console.log("---------------------");
+                })
+            }
+            else {
+                console.log("error");
+            }
 
+            const getSalesOrders = await salesOrdersModel.find({ $nor: [{ Offer: "Order" }], Products: { $in: [proName] } });
 
-
-            const getsalesOrders = await salesOrdersModel.find({ $nor: [{ Offer: "Order" }], Products: { $in: [x] } });
-            // console.log("First-------------------------------salesOrders", getsalesOrders, "--------------------");
-
-            for (const salesOrder of getsalesOrders) {
+            for (const salesOrder of getSalesOrders) {
 
                 let totalCost = 0
 
@@ -707,79 +722,24 @@ else if (input == "10") {
 
                         totalCost += productCost.Cost
 
-
                     } catch (error) {
                         console.error('Error finding product cost:', error);
                     }
-
-
-
 
                 }
                 const Profit = salesOrder.TotalPrice - totalCost
                 const profitTax = (salesOrder.TotalPrice - totalCost) * 1.2
                 console.log("-------------------------------------------------------------------------------------------");
                 console.log(salesOrder.Products.join(" and "),
-                    " Just for: ",Profit,
+                    "Just for:", Profit,
                     "Of profit. of course We care deeply our costumers so much!\n Instead of  55% tax on offer we only take 20%. \n\n ---------------------------> The Price will be:",
-                     profitTax,
-                      "<--------------------------------\n");
-               
+                    profitTax,
+                    "<--------------------------------\n");
+
             }
             console.log("-------------------------------------------------------------------------------------------");
         }
 
-
-
-
-
-
-
-        // const allProducts = await productModel.find({})
-        // let totalProfit = allProducts.reduce((profit, product) => {
-        //     console.log(product.Name);
-        //     console.log(profit);
-        //     return profit += product.Stock * (product.Price - product.Cost)
-        // }, 0)
-        // console.log(totalProfit);
-
-
-
-        // console.log(getOffers);
-        // console.log("name"+getOffers.Products);
-        // console.log(getOffers.Name,  ": ", getOffers.Price);
-        // const saleCost = await productModel.find({ Cost: { "$gt": 0 } }, { Cost: 1, })
-        // const totalCost = saleCost.reduce((Total, item) => {
-        //     return Total += item.Cost
-        // }, 0)
-
-        // const saleTotalPrice = await salesOrdersModel.find({ TotalPrice: { "$gt": 0 } }, { TotalPrice: 1, })
-        // const absolutePrice = saleTotalPrice.reduce((Total, item) => {
-        //     return Total += item.TotalPrice
-        // }, 0)
-
-        // // console.log(absolutePrice);
-
-        // const test = absolutePrice - totalCost
-        // console.log("totalCost: "+ totalCost);
-        // console.log("totalPrice: "+ absolutePrice);
-        // console.log("Total profit: "+test);
-        // console.log("skattad: "+test *0.8);
-
-        // const allSalesOrders = await salesOrdersModel.find({})
-
-        //     allSalesOrders.reduce(async (Offers, salesOrder) => {
-        //         // if (salesOrder.Products.length == "1") {
-
-        //         // }
-        //         console.log(Offers);
-        //         console.log(salesOrder.Products.length);
-        //         console.log(salesOrder.Products); 
-        //     // else
-        //     }, [])
-
-
-        //     // }
     }
     else if (input == "14") {
         runApp = false;
@@ -788,23 +748,13 @@ else if (input == "10") {
     else if (input == "15") {
         let allProducts = await productModel.find({})
 
-
-
         console.log("Here is a list of all the products: ");
         console.log(allProducts);
 
     }
 
     else {
-        console.log("Please enter a number between 1 and 15.")
+        console.log("Please enter a number between 1 and 14.")
     }
 
 };
-
-
-
-
-
-
-
-
