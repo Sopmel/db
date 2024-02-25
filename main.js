@@ -293,17 +293,15 @@ while (runApp) {
     }
 //6. View all offers that contain a product from a specific category
     else if (input == '6') {
-        let newOffers = await offersModel.find({})
+        let newOffers = await categoriesModel.find({})
         
         newOffers.forEach((data, index) => {
             console.log();
-            console.log((index + 1) + ". " + data.Name);
-            console.log(data.Products);
-            console.log(data.Price);
+            console.log(data.Name);
             console.log();
             console.log("---------------------");
         })
-        let chooseCategory = p('Select the category you want to see offers from?')
+        let chooseCategory = p('Write the name of the category you want to see offers from: ')
         let productsInCategory = await productModel.find({ Category: chooseCategory });
 
         let productNames = productsInCategory.map(product => product.Name);
