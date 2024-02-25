@@ -67,10 +67,7 @@ console.log("11. View suppliers")
 console.log("12. View all sales")
 console.log("13. View sum of all profits")
 console.log("14. Close app")
-console.log("11. View suppliers")
-console.log("12. View all sales")
-console.log("13. View sum of all profits")
-console.log("14. Close app")
+
 
 
 let runApp = true;
@@ -227,17 +224,18 @@ while (runApp) {
             console.log("---------------------");
         })
 
-        const UsersChoice = p("Write the number of the category you wish to select: ): ")
+        const UsersChoice = p("Write the number of the category you wish to select: ")
 
         if (UsersChoice >= "1") {
             let selCat = allCategories[UsersChoice - 1]
 
-            console.log(selCat);
+        
             let catName = selCat.Name
 
             const productNameByUser = await productModel.find({ Category: catName })
             console.log("---------------------");
             productNameByUser.forEach((data, index) => {
+                console.log();
                 console.log(index + ".");
                 console.log("Name: " + data.Name);
                 console.log("Category: ", data.Category);
@@ -296,7 +294,15 @@ while (runApp) {
 //6. View all offers that contain a product from a specific category
     else if (input == '6') {
         let newOffers = await offersModel.find({})
-
+        
+        newOffers.forEach((data, index) => {
+            console.log();
+            console.log((index + 1) + ". " + data.Name);
+            console.log(data.Products);
+            console.log(data.Price);
+            console.log();
+            console.log("---------------------");
+        })
         let chooseCategory = p('Select the category you want to see offers from?')
         let productsInCategory = await productModel.find({ Category: chooseCategory });
 
