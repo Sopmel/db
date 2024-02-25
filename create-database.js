@@ -167,7 +167,7 @@ offersCollection.insertMany(
         Name: "Offer 3",
         Products: ["Refrigerator", "Smartphone", "Soccer Ball"],
         Price: 1830,
-        Active: false
+        Active: true
        }
     ]
 );
