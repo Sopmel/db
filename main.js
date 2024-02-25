@@ -559,96 +559,6 @@ while (runApp) {
         }
     }
 
-
-//10. ship products
-else if (input == "10") {
-    console.log("\n0Ship Orders");
-
-    while (true) {
-        // Hämta alla ordrar med status "pending"
-        let salesOrders = await salesOrdersModel.find({ Status: "pending" });
-
-        if (salesOrders.length === 0) {
-            console.log("No pending orders to ship.");
-            break;
-        }
-
-        // Visa alla ordrar med status "pending"
-        console.log("\nPending Orders:");
-        salesOrders.forEach((orderToShip, index) => {
-            console.log(`\n${index + 1}.`);
-            console.log(`   Name: ${orderToShip.Offer ? orderToShip.Offer : "Order " + (index + 1)}`);
-            console.log(`   Products: ${orderToShip.Products}`);
-            console.log(`   Total Price: ${orderToShip.TotalPrice}`);
-            console.log(`   Status: ${orderToShip.Status}`);
-        });
-
-        let orderIndex = parseInt(p("\nSelect the order to ship (0 to quit): "));
-
-        if (parseInt(orderIndex) === 0) {
-            console.log("Closing Orders");
-            break;
-        }
-        if (isNaN(orderIndex) || orderIndex < 1 || orderIndex > salesOrders.length) {
-            console.log("\nInvalid order number. Please try again.");
-            continue;
-        }
-
-        let selectedOrder = salesOrders[orderIndex - 1];
-
-        // Säkerställ att Quantity-matchar antalet produkter
-        if (selectedOrder.Products.length !== selectedOrder.Quantity.length) {
-    
-            selectedOrder.Quantity = Array(selectedOrder.Products.length).fill(1);
-            await selectedOrder.save();
-            
-        }
-
-        // Variabel för att spåra om hela ordern kan skickas
-        let canShipOrder = true;
-
-        // Loopa igenom varje produkt i ordern för att kontrollera lagerstatusen
-        for (let i = 0; i < selectedOrder.Products.length; i++) {
-            let productName = selectedOrder.Products[i];
-            let orderedQuantity = selectedOrder.Quantity[i]; // Hämta kvantiteten för den aktuella produkten
-
-            let productInOrder = await productModel.findOne({ Name: productName });
-
-            // Kontrollera om produkten finns och om det finns tillräckligt med lager för den beställda mängden
-            if (productInOrder && productInOrder.Stock >= orderedQuantity) {
-                // Uppdatera lagerstatusen för produkten
-                let updatedStock = productInOrder.Stock - orderedQuantity;
-                await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
-                console.log(`\n Updated stock for product ${productName}: ${updatedStock}`);
-
-                if (updatedStock === 0) {
-                    // Hämta alla erbjudanden som innehåller den slutsålda produkten
-                    let affectedOffers = await offersModel.find({ Products: productName });
-
-                    // Loopa igenom varje påverkat erbjudande och uppdatera Active-fältet
-                    for (let offer of affectedOffers) {
-                        await offersModel.updateOne({ _id: offer._id }, { $set: { Active: false } });
-                        console.log(`Offer ${offer.Name} is now inactive due to zero stock.`);
-                    }
-                }
-            } else {
-                console.log(`\n Cannot ship order. Insufficient stock for product ${productName}.`);
-                canShipOrder = false; // Sätt canShipOrder till false om det inte finns tillräckligt med lager för minst en produkt
-                break; // Avbryt loopen om en produkt saknar tillräckligt med lager
-            }
-        }
-
-        // Uppdatera statusen till "shipped" endast om canShipOrder är true
-        if (canShipOrder) {
-            await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
-            console.log(`\nYour Order has been marked as shipped.`);
-        } else {
-            console.log("\nCannot mark order as shipped due to insufficient stock for one or more products.");
-        }
-    }
-}
-
-
     //11. View suppliers
     else if (input == "11") {
         const aa = await supplierModel.find({})
@@ -696,22 +606,9 @@ else if (input == "10") {
             let proName;
             const productNameByUser = await productModel.find({ SupplierName: proName })
             if (productNameByUser)
-                if (userChoice >= "1") {
+                if (userChoice >= 1) {
                     let selPro = getProduct[userChoice - 1]
                     proName = selPro.Name
-
-                    const productNameByUser = await productModel.find({ SupplierName: proName })
-
-                    console.log("---------------------");
-                    productNameByUser.forEach((data, index) => {
-                        console.log(index + ".");
-                        console.log("Name: " + data.Name);
-                        console.log("Category: ", data.Category);
-                        console.log("Price: ", data.Price);
-                        console.log("Cost: ", data.Cost);
-                        console.log("Stock: ", data.Stock);
-                        console.log("---------------------");
-                    })
                 }
                 else {
                     console.log("error");
@@ -723,10 +620,10 @@ else if (input == "10") {
 
                 let totalCost = 0
 
-                for (const Cookie of salesOrder.Products) {
+                for (const saleOrderPro of salesOrder.Products) {
                     let productCost = 0;
                     try {
-                        productCost = await productModel.findOne({ Name: Cookie });
+                        productCost = await productModel.findOne({ Name: saleOrderPro });
 
                         totalCost += productCost.Cost
 
@@ -739,9 +636,9 @@ else if (input == "10") {
                 const profitTax = (salesOrder.TotalPrice - totalCost) * 0.8
                 console.log("-------------------------------------------------------------------------------------------");
                 console.log(salesOrder.Products.join(" and "),
-                    "Profit (including tax):", Profit,
+                    "Profit (including tax):", profitTax,
                     "\n\n ---------------------------> profit (excluding tax):",
-                    profitTax,
+                    Profit,
                     "<--------------------------------\n");
 
             }
