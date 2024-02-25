@@ -80,15 +80,15 @@ while (runApp) {
 
     // 1. add new Category
     if (input == "1") {
-        let newCategoryName = p("Add Name of new Category: ");
-        let newCategoryDescription = p("Add Description to new Category: ")
+        let newCategoryName = p(" \n Add Name of new Category: ");
+        let newCategoryDescription = p(" \n Add Description to new Category: ")
         try {
             let newCategory = await categoriesModel.create({
                 Name: newCategoryName,
                 Description: newCategoryDescription
             });
 
-            console.log("Category added Succesfully!")
+            console.log(" \nCategory added Succesfully!")
 
             console.log(newCategory)
 
@@ -99,7 +99,7 @@ while (runApp) {
     //add new Product
     else if (input === "2") {
 
-        let newName = p("Add Name of product: ");
+        let newName = p(" \n Add Name of product: ");
 
         console.log("Choose a Category for the new product:");
         console.log("1. Add new Category");
@@ -166,7 +166,7 @@ while (runApp) {
                 let existingSupplier = await supplierModel.findOne({ Name: supplierName });
 
                 if (existingSupplier) {
-                    console.log("Supplier already exists.");
+                    console.log(" \n Supplier already exists.");
                     // Om supplier finns, använd den
                     await productModel.create({
                         Name: newName,
@@ -176,7 +176,7 @@ while (runApp) {
                         Stock: newStock,
                         SupplierName: existingSupplier.Name
                     });
-                    console.log("Product added successfully!");
+                    console.log(" \n Product added successfully!");
                 } else {
                     // Om supplier inte finns, skapa ny
                     let newSupplier = await supplierModel.create({
@@ -192,7 +192,7 @@ while (runApp) {
                         Stock: newStock,
                         SupplierName: newSupplier.Name
                     });
-                    console.log("Supplier and product added successfully!");
+                    console.log(" \n Supplier and product added successfully!");
                 }
             } catch (err) {
                 console.error("Error:", err);
@@ -597,13 +597,21 @@ else if (input == "10") {
 
         let selectedOrder = salesOrders[orderIndex - 1];
 
+        // Säkerställ att Quantity-matchar antalet produkter
+        if (selectedOrder.Products.length !== selectedOrder.Quantity.length) {
+            console.log("\nMismatch between Products and Quantity. Fixing...");
+            selectedOrder.Quantity = Array(selectedOrder.Products.length).fill(1);
+            await selectedOrder.save();
+            console.log("Quantity has been updated to match the number of products.");
+        }
+
         // Variabel för att spåra om hela ordern kan skickas
         let canShipOrder = true;
 
         // Loopa igenom varje produkt i ordern för att kontrollera lagerstatusen
         for (let i = 0; i < selectedOrder.Products.length; i++) {
             let productName = selectedOrder.Products[i];
-            let orderedQuantity = selectedOrder.Quantity[selectedOrder.Products.indexOf(productName)]; // Hämta kvantiteten för den aktuella produkten
+            let orderedQuantity = selectedOrder.Quantity[i]; // Hämta kvantiteten för den aktuella produkten
 
             let productInOrder = await productModel.findOne({ Name: productName });
 
@@ -634,12 +642,13 @@ else if (input == "10") {
         // Uppdatera statusen till "shipped" endast om canShipOrder är true
         if (canShipOrder) {
             await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
-            console.log(`\nOrder ${selectedOrder.Name} has been marked as shipped.`);
+            console.log(`\nYour Order has been marked as shipped.`);
         } else {
             console.log("\nCannot mark order as shipped due to insufficient stock for one or more products.");
         }
     }
 }
+
 
 //11. View suppliers
     else if (input == "11") {
