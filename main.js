@@ -408,7 +408,7 @@ while (runApp) {
             let orderInput = p("\nChoose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
-                console.log("Exiting order creation.");
+                
                 break;
             }
 
@@ -421,13 +421,13 @@ while (runApp) {
                     ]);
 
                     if (products.length > 0) {
-                        console.log(`\nProducts in category "${selectedCategory.Name}":`);
+                        console.log(`\n Products in category "${selectedCategory.Name}":`);
                         products.forEach((product, index) => {
                             console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
                         });
 
                         while (true) {
-                            let productIndex = parseInt(p("\nChoose product to add (0 to exit): "))
+                            let productIndex = parseInt(p("\nChoose product to add (0 to exit category): "))
 
                             if (productIndex === 0) break;
                             if (productIndex < 1 || productIndex > products.length) {
@@ -488,7 +488,7 @@ while (runApp) {
 
     //9. Create order for offers
     else if (input == "9") {
-        console.log("Create order for offers");
+        console.log("\n Create order for offers");
 
         let orderItems = [];
         let continueAddingOffer = true;
@@ -508,19 +508,18 @@ while (runApp) {
                 console.log(`${index + 1}. Offer: \n Products: ${offer._id.join(', ')} \n Price: ${offer.totalPrice}`);
             });
 
-            let orderInput = p("Choose offer to add (0 to finish): ");
+            let orderInput = p(" \nChoose offer to add (0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
-                console.log("Exiting offer creation.");
                 break;
             }
 
             if (parseInt(orderInput) >= 1 && parseInt(orderInput) <= offers.length) {
                 let selectedOffer = offers[parseInt(orderInput) - 1];
 
-                let quantity = parseInt(p("How many would you like to add? "));
+                let quantity = parseInt(p("\n How many would you like to add? "));
                 if (quantity <= 0) {
-                    console.log("Quantity must be greater than 0.");
+                    console.log(" \n Quantity must be greater than 0.");
                     continue;
                 }
 
@@ -531,7 +530,7 @@ while (runApp) {
                 console.log("Invalid option for Offer.");
             }
 
-            let continueInput = p("Do you want to add more offers? (yes/no): ");
+            let continueInput = p("\n Do you want to add more offers? (yes/no): ");
             continueAddingOffer = continueInput.toLowerCase() === 'yes';
         }
 
@@ -599,10 +598,10 @@ else if (input == "10") {
 
         // Säkerställ att Quantity-matchar antalet produkter
         if (selectedOrder.Products.length !== selectedOrder.Quantity.length) {
-            console.log("\nMismatch between Products and Quantity. Fixing...");
+    
             selectedOrder.Quantity = Array(selectedOrder.Products.length).fill(1);
             await selectedOrder.save();
-            console.log("Quantity has been updated to match the number of products.");
+            
         }
 
         // Variabel för att spåra om hela ordern kan skickas
@@ -620,7 +619,7 @@ else if (input == "10") {
                 // Uppdatera lagerstatusen för produkten
                 let updatedStock = productInOrder.Stock - orderedQuantity;
                 await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
-                console.log(`Updated stock for product ${productName}: ${updatedStock}`);
+                console.log(`\n Updated stock for product ${productName}: ${updatedStock}`);
 
                 if (updatedStock === 0) {
                     // Hämta alla erbjudanden som innehåller den slutsålda produkten
@@ -633,7 +632,7 @@ else if (input == "10") {
                     }
                 }
             } else {
-                console.log(`\nCannot ship order. Insufficient stock for product ${productName}.`);
+                console.log(`\n Cannot ship order. Insufficient stock for product ${productName}.`);
                 canShipOrder = false; // Sätt canShipOrder till false om det inte finns tillräckligt med lager för minst en produkt
                 break; // Avbryt loopen om en produkt saknar tillräckligt med lager
             }
