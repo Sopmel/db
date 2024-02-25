@@ -96,7 +96,7 @@ while (runApp) {
             console.error("Error:", err);
         }
     }
-    //add new Product
+ //2.add new Product
     else if (input === "2") {
 
         let newName = p(" \n Add Name of product: ");
@@ -293,6 +293,7 @@ while (runApp) {
         let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
         console.log(offers);
     }
+//6. View all offers that contain a product from a specific category
     else if (input == '6') {
         let newOffers = await offersModel.find({})
 
@@ -305,6 +306,7 @@ while (runApp) {
         console.log(showOffers);
 
     }
+//7. View the number of offers based on the number of its products in stock
     else if (input == "7") {
 
         let allOffers = await offersModel.find();
@@ -444,7 +446,7 @@ while (runApp) {
         }
     }
 
-    //9. Create order for offers
+//9. Create order for offers
     else if (input == "9") {
         console.log("\n Create order for offers");
 
@@ -697,13 +699,6 @@ else if (input == "10") {
     else if (input == "14") {
         runApp = false;
         mongoose.connection.close()
-    }
-    else if (input == "15") {
-        let allProducts = await productModel.find({})
-
-        console.log("Here is a list of all the products: ");
-        console.log(allProducts);
-
     }
 
     else {
