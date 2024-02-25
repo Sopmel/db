@@ -82,6 +82,7 @@ let runApp = true;
 while (runApp) {
     let input = p("Make a choice by entering a number: ");
 
+// 1. add new Category
     if(input == "1"){
         let newCategoryName = p("Add Name of new Category: ");
         let newCategoryDescription = p("Add Description to new Category: ")
@@ -98,7 +99,7 @@ while (runApp) {
     } catch (err) {
         console.error("Error:", err);
     }}
-
+//add new Product
     else if (input === "2") {
         
         let newName = p("Add Name of product: ");
@@ -217,6 +218,86 @@ while (runApp) {
             console.log("Invalid option.");
         }
     }
+//3. View products by category
+    else if (input == "3") {
+        const aaa = await productModel.aggregate([
+            {
+                $group: {
+                    _id: "$Category"
+                }
+            }
+        ])
+        console.log(aaa);
+
+        aaa.forEach((data, index) => {
+            console.log();
+            console.log(index + ". " + data._id);
+            console.log();
+            console.log("---------------------");
+        })
+        
+        const ll = p ("test")
+        
+        const dda = await productModel.find({Category: ll})
+       
+        console.log(dda);
+    }
+//4. View products by supplier
+    else if (input == "4") {
+        const x = await supplierModel.find({})
+        let indexTransfer;
+        const cookies = Number(p("test"))
+        x.forEach((data, index) => {
+            console.log((index + 1) + ". " + data.Name);
+
+            if ((index + 1) == cookies) {
+
+                indexTransfer = cookies
+
+            }
+
+
+        })
+        console.log(indexTransfer);
+        const cookies55 = await productModel.find({ SupplierId: indexTransfer })
+
+
+        cookies55.forEach((prudoct) => {
+            console.log("-----------------------");
+            console.log(prudoct.Name);
+            console.log(prudoct.Category);
+            console.log(prudoct.Price);
+            console.log(prudoct.Cost);
+            console.log(prudoct.Stock);
+
+
+
+        })
+
+
+    }
+//5. View all offers within a price range
+    else if(input=="5"){
+let priceRange=p('Enter the price range(use - in between)')
+ let [minPrice, maxPrice] = priceRange.split("-").map(Number);
+
+let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
+        console.log(offers);
+    }
+    else if (input=='6') {
+        let newOffers = await offersModel.find({})
+       
+     let chooseCategory=p('Select the category you want to see offers from?')
+     let productsInCategory = await productModel.find({ Category: chooseCategory });
+
+     let productNames = productsInCategory.map(product => product.Name);
+  
+let showOffers= await offersModel.find({ Products: { $in: productNames } }).select('-_id')
+console.log(showOffers);
+
+    
+    }
+//8. Create order for products
     else if(input == "8"){
         console.log("Create order for products");
 
@@ -299,138 +380,8 @@ while (runApp) {
         } catch (err) {
             console.error("Error creating order:", err);
         }}
-    } 
-
-
-    else if(input=="5"){
-let priceRange=p('Enter the price range(use - in between)')
- let [minPrice, maxPrice] = priceRange.split("-").map(Number);
-
-let offers = await offersModel.find({ Price: { $gte: minPrice, $lte: maxPrice } }).select('-_id').sort({ Price: 1 });
-        console.log(offers);
     }
-    else if (input=='6') {
-        let newOffers = await offersModel.find({})
-       
-     let chooseCategory=p('Select the category you want to see offers from?')
-     let productsInCategory = await productModel.find({ Category: chooseCategory });
-
-     let productNames = productsInCategory.map(product => product.Name);
-  
-let showOffers= await offersModel.find({ Products: { $in: productNames } }).select('-_id')
-console.log(showOffers);
-
-    
-    }
-else if(input==7){
-
-let allOffers = await offersModel.find();
-
-let allProductsInStockCount = 0;
-let someProductsInStockCount = 0;
-let noProductsInStockCount = 0;
-
-for (let offer of allOffers) {
-     let allProductsInStock = true;
-    for (let productName of offer.Products) {
-        let product = await productModel.findOne({ Name: productName });
-        if (product.Stock === 0) {
-            allProductsInStock = false;
-            break;
-        }
-    }
-
-    if (allProductsInStock) {
-        allProductsInStockCount++;
-    } else {
-        let someProductsInStock = false;
-        for (let productName of offer.Products) {
-            let product = await productModel.findOne({ Name: productName });
-            if (product.Stock > 0) {
-                someProductsInStock = true;
-                break;
-            }
-        }
-        if (someProductsInStock) {
-            someProductsInStockCount++;
-        } else {
-            noProductsInStockCount++;
-        }
-    }
-}
-
-
-console.log("Summary:");
-console.log(`- Offers with all products in stock: ${allProductsInStockCount}`);
-console.log(`- Offers with some products in stock: ${someProductsInStockCount}`);
-console.log(`- Offers with no products in stock: ${noProductsInStockCount}`);
-
-
-
-}
-
-
-    else if (input == "3") {
-        const aaa = await productModel.aggregate([
-            {
-                $group: {
-                    _id: "$Category"
-                }
-            }
-        ])
-        console.log(aaa);
-
-        aaa.forEach((data, index) => {
-            console.log();
-            console.log(index + ". " + data._id);
-            console.log();
-            console.log("---------------------");
-        })
-        
-        const ll = p ("test")
-        
-        const dda = await productModel.find({Category: ll})
-       
-        console.log(dda);
-
-        
-
-    }
-    else if (input == "4") {
-        const x = await supplierModel.find({})
-        let indexTransfer;
-        const cookies = Number(p("test"))
-        x.forEach((data, index) => {
-            console.log((index + 1) + ". " + data.Name);
-
-            if ((index + 1) == cookies) {
-
-                indexTransfer = cookies
-
-            }
-
-
-        })
-        console.log(indexTransfer);
-        const cookies55 = await productModel.find({ SupplierId: indexTransfer })
-
-
-        cookies55.forEach((prudoct) => {
-            console.log("-----------------------");
-            console.log(prudoct.Name);
-            console.log(prudoct.Category);
-            console.log(prudoct.Price);
-            console.log(prudoct.Cost);
-            console.log(prudoct.Stock);
-
-
-
-        })
-
-
-    }
-   
-
+//12. View suppliers
     else if (input == "12") {
         const aa = await supplierModel.find({})
         aa.forEach((data, index) => {
