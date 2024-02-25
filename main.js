@@ -396,8 +396,8 @@ while (runApp) {
         console.log("Create order for products");
 
 
-    let orderItems = [];
-    let continueAdding = true;
+        let orderItems = [];
+        let continueAdding = true;
 
         while (continueAdding) {
             let categories = await categoriesModel.find();
@@ -405,7 +405,7 @@ while (runApp) {
                 console.log(`${index + 1}. ${category.Name}`);
             });
 
-        let orderInput = p("\nChoose category to view products( 0 to finish): ");
+            let orderInput = p("\nChoose category to view products( 0 to finish): ");
 
             if (parseInt(orderInput) === 0) {
                 console.log("Exiting order creation.");
@@ -420,42 +420,42 @@ while (runApp) {
                         { $match: { Category: selectedCategory.Name } }
                     ]);
 
-                if (products.length > 0) {
-                    console.log(`\nProducts in category "${selectedCategory.Name}":`);
-                    products.forEach((product, index) => {
-                        console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
-                    });
+                    if (products.length > 0) {
+                        console.log(`\nProducts in category "${selectedCategory.Name}":`);
+                        products.forEach((product, index) => {
+                            console.log(` ${index + 1}. Name: ${product.Name}, Price: ${product.Price}, Stock: ${product.Stock}`);
+                        });
 
-                    while (true) {
-                        let productIndex = parseInt(p("\nChoose product to add (0 to exit): "))
+                        while (true) {
+                            let productIndex = parseInt(p("\nChoose product to add (0 to exit): "))
 
                             if (productIndex === 0) break;
                             if (productIndex < 1 || productIndex > products.length) {
                                 console.log("Invalid number. "); continue;
                             }
 
-                        let quantity = parseInt(p("\nHow many would you like to add? "));
-                        if (quantity <= 0) {
-                            console.log("number must be greater than 0. "); continue;
-                        }
+                            let quantity = parseInt(p("\nHow many would you like to add? "));
+                            if (quantity <= 0) {
+                                console.log("number must be greater than 0. "); continue;
+                            }
 
                             let selectedProduct = products[productIndex - 1];
                             orderItems.push({ product: selectedProduct, quantity });
                         }
 
-                } else {
-                    console.log("\nNo products in this Category. ");
+                    } else {
+                        console.log("\nNo products in this Category. ");
+                    }
+                } catch (err) {
+                    console.log("\nError fetching Products.");
                 }
-            } catch (err) {
-                console.log("\nError fetching Products.");
+            } else {
+                console.log("\nInvalid Category. ");
             }
-        } else {
-            console.log("\nInvalid Category. ");
-        }
 
-        let continueInput = p("\nDo you want to add more products? (yes/no): ");
-        continueAdding = continueInput.toLowerCase() === 'yes';
-    }
+            let continueInput = p("\nDo you want to add more products? (yes/no): ");
+            continueAdding = continueInput.toLowerCase() === 'yes';
+        }
 
         if (orderItems.length > 0) {
             // Beräkna det totala priset för ordern
@@ -535,113 +535,35 @@ while (runApp) {
             continueAddingOffer = continueInput.toLowerCase() === 'yes';
         }
 
-    if (orderItems.length > 0) {
-        try {
-            // Beräkna den totala priset för ordern baserat på valda erbjudanden
-            let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.offer.totalPrice, 0);
+        if (orderItems.length > 0) {
+            try {
+                // Beräkna den totala priset för ordern baserat på valda erbjudanden
+                let totalPrice = orderItems.reduce((total, item) => total + item.quantity * item.offer.totalPrice, 0);
 
-             // Hämta produkterna från varje orderItem
-            let products = orderItems.map(item => item.offer._id).flat();
-             // Hämta erbjudandets namn från varje orderItem
-            let offerNames = orderItems.map(item => item.offer.Offer);
+                // Hämta produkterna från varje orderItem
+                let products = orderItems.map(item => item.offer._id).flat();
+                // Hämta erbjudandets namn från varje orderItem
+                let offerNames = orderItems.map(item => item.offer.Offer);
 
-            // Skapa en ny order
-            let newOrder = await salesOrdersModel.create({
-                Offer: orderItems.map(item => item.offerName),
-                Products: products,
-                Quantity: orderItems.map(item => item.quantity),
-                TotalPrice: totalPrice,
-                Status: "pending"
-            });
-            console.log("Order created successfully:", newOrder);
-        } catch (err) {
-            console.error("Error creating order:", err);
-        }
-    }
-}
-
-
-//10. ship products
-else if (input == "10") {
-    console.log("\n0Ship Orders");
-
-    while (true) {
-        // Hämta alla ordrar med status "pending"
-        let salesOrders = await salesOrdersModel.find({ Status: "pending" });
-
-        if (salesOrders.length === 0) {
-            console.log("No pending orders to ship.");
-            break;
-        }
-
-        // Visa alla ordrar med status "pending"
-        console.log("\nPending Orders:");
-        salesOrders.forEach((orderToShip, index) => {
-            console.log(`\n${index + 1}.`);
-            console.log(`   Name: ${orderToShip.Offer ? orderToShip.Offer : "Order " + (index + 1)}`);
-            console.log(`   Products: ${orderToShip.Products}`);
-            console.log(`   Total Price: ${orderToShip.TotalPrice}`);
-            console.log(`   Status: ${orderToShip.Status}`);
-        });
-
-        let orderIndex = parseInt(p("\nSelect the order to ship (0 to quit): "));
-
-        if (parseInt(orderIndex) === 0) {
-            console.log("Closing Orders");
-            break;
-        }
-        if (isNaN(orderIndex) || orderIndex < 1 || orderIndex > salesOrders.length) {
-            console.log("\nInvalid order number. Please try again.");
-            continue;
-        }
-
-        let selectedOrder = salesOrders[orderIndex - 1];
-
-        // Variabel för att spåra om hela ordern kan skickas
-        let canShipOrder = true;
-
-        // Loopa igenom varje produkt i ordern för att kontrollera lagerstatusen
-        for (let i = 0; i < selectedOrder.Products.length; i++) {
-            let productName = selectedOrder.Products[i];
-            let orderedQuantity = selectedOrder.Quantity[selectedOrder.Products.indexOf(productName)]; // Hämta kvantiteten för den aktuella produkten
-
-            let productInOrder = await productModel.findOne({ Name: productName });
-
-            // Kontrollera om produkten finns och om det finns tillräckligt med lager för den beställda mängden
-            if (productInOrder && productInOrder.Stock >= orderedQuantity) {
-                // Uppdatera lagerstatusen för produkten
-                let updatedStock = productInOrder.Stock - orderedQuantity;
-                await productModel.updateOne({ Name: productName }, { $set: { Stock: updatedStock } });
-                console.log(`Updated stock for product ${productName}: ${updatedStock}`);
-
-                if (updatedStock === 0) {
-                    // Hämta alla erbjudanden som innehåller den slutsålda produkten
-                    let affectedOffers = await offersModel.find({ Products: productName });
-
-                    // Loopa igenom varje påverkat erbjudande och uppdatera Active-fältet
-                    for (let offer of affectedOffers) {
-                        await offersModel.updateOne({ _id: offer._id }, { $set: { Active: false } });
-                        console.log(`Offer ${offer.Name} is now inactive due to zero stock.`);
-                    }
-                }
-            } else {
-                console.log(`\nCannot ship order. Insufficient stock for product ${productName}.`);
-                canShipOrder = false; // Sätt canShipOrder till false om det inte finns tillräckligt med lager för minst en produkt
-                break; // Avbryt loopen om en produkt saknar tillräckligt med lager
+                // Skapa en ny order
+                let newOrder = await salesOrdersModel.create({
+                    Offer: orderItems.map(item => item.offerName),
+                    Products: products,
+                    Quantity: orderItems.map(item => item.quantity),
+                    TotalPrice: totalPrice,
+                    Status: "pending"
+                });
+                console.log("Order created successfully:", newOrder);
+            } catch (err) {
+                console.error("Error creating order:", err);
             }
         }
-
-        // Uppdatera statusen till "shipped" endast om canShipOrder är true
-        if (canShipOrder) {
-            await salesOrdersModel.updateOne({ _id: selectedOrder._id }, { $set: { Status: "shipped" } });
-            console.log(`\nOrder ${selectedOrder.Name} has been marked as shipped.`);
-        } else {
-            console.log("\nCannot mark order as shipped due to insufficient stock for one or more products.");
-        }
     }
-}
 
-//11. View suppliers
+
+
+
+    //11. View suppliers
     else if (input == "11") {
         const aa = await supplierModel.find({})
         aa.forEach((data, index) => {
@@ -672,7 +594,7 @@ else if (input == "10") {
 
     else if (input == "13") {
 
-        const getproduct = await productModel.find({});
+        const getProduct = await productModel.find({});
 
         getProduct.forEach((product, index) => {
             console.log(`-----------\n${index + 1}. ${product.Name}`);
@@ -688,26 +610,26 @@ else if (input == "10") {
             let proName;
             const productNameByUser = await productModel.find({ SupplierName: proName })
             if (productNameByUser)
-            if (userChoice >= "1") {
-                let selPro = getProduct[userChoice - 1]
-                proName = selPro.Name
+                if (userChoice >= "1") {
+                    let selPro = getProduct[userChoice - 1]
+                    proName = selPro.Name
 
-                const productNameByUser = await productModel.find({ SupplierName: proName })
+                    const productNameByUser = await productModel.find({ SupplierName: proName })
 
-                console.log("---------------------");
-                productNameByUser.forEach((data, index) => {
-                    console.log(index + ".");
-                    console.log("Name: " + data.Name);
-                    console.log("Category: ", data.Category);
-                    console.log("Price: ", data.Price);
-                    console.log("Cost: ", data.Cost);
-                    console.log("Stock: ", data.Stock);
                     console.log("---------------------");
-                })
-            }
-            else {
-                console.log("error");
-            }
+                    productNameByUser.forEach((data, index) => {
+                        console.log(index + ".");
+                        console.log("Name: " + data.Name);
+                        console.log("Category: ", data.Category);
+                        console.log("Price: ", data.Price);
+                        console.log("Cost: ", data.Cost);
+                        console.log("Stock: ", data.Stock);
+                        console.log("---------------------");
+                    })
+                }
+                else {
+                    console.log("error");
+                }
 
             const getSalesOrders = await salesOrdersModel.find({ $nor: [{ Offer: "Order" }], Products: { $in: [proName] } });
 
@@ -728,11 +650,11 @@ else if (input == "10") {
 
                 }
                 const Profit = salesOrder.TotalPrice - totalCost
-                const profitTax = (salesOrder.TotalPrice - totalCost) * 1.2
+                const profitTax = (salesOrder.TotalPrice - totalCost) * 0.8
                 console.log("-------------------------------------------------------------------------------------------");
                 console.log(salesOrder.Products.join(" and "),
-                    "Just for:", Profit,
-                    "Of profit. of course We care deeply our costumers so much!\n Instead of  55% tax on offer we only take 20%. \n\n ---------------------------> The Price will be:",
+                    "Profit (including tax):", Profit,
+                    "\n\n ---------------------------> profit (excluding tax):",
                     profitTax,
                     "<--------------------------------\n");
 
